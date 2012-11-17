@@ -298,6 +298,7 @@ nbGoodResult3 = 0
 
 #pylab.plot(x, y)
 #pylab.show()
+
 storeData()
 loadData()
 
