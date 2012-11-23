@@ -33,7 +33,7 @@ def loadImageData( filename ):
 	# Recuperation des valeurs depuis les images
 	data = []
 	for image in imageList[:,1]:
-		img = im.open("orl_faces/"+ str( image ))
+		img = im.open("Databases/orl_faces/"+ str( image ))
 		data.append( list(img.getdata()) )
 
 	return np.transpose( data ), imageList[:, 0].astype(int)
