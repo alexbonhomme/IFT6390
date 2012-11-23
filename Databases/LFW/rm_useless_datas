@@ -2,17 +2,23 @@
 # Permet de supprimer tout les dossier qui contiène "n" images
 if [ $# -lt 1 ]
 then
-	printf "\033[31m"	# Met le text en rouge
-	echo "Nombre d'argument invalide !"	>&2
-	echo "Usage: $0 n [file_out]" >&2
-	printf "\033[0m"	# Retour au couleur par defaut
+	printf "\033[01m\033[31mNombre d'argument invalide !\n\033[0m"	>&2
+	printf "\033[01mUsage: $0 n [file_out]\n\033[0m" >&2
 	exit -1
 fi
+printf "\033[01m$0: \033[35mSuppresion des fichier en cours...\n\033[0m"
 cat lfw-names.txt | grep -e "[[:space:]]$1$" | cut -f1 | sed "s/^/.\/lfw\//" | xargs rm -r
+printf "\033[01m$0: \033[32mSuppresion des fichiers terminée.\n\033[0m"
 
 if [ $# -gt 1 ]
 then
-    #sed "/[[:space:]]$1$/d" lfw-names.txt > $2
-    cat lfw-names.txt | grep "$(ls lfw)" > $2 # FAUX, ne supprime pas certain nom qui commence par les meme lettres...
-    printf "\033[35m$0: Le fichier $2 a été généré.\n\033[0m"
+    printf "\033[01m$0: \033[35mConstruction du fichier $2...\n\033[0m"
+    > $2
+    for file in $(ls lfw);
+    do
+        #echo $file
+        cat lfw-names.txt | grep -e "^$file[[:space:]]" >> $2
+    done
+    #cat lfw-names.txt | grep -e "^$(ls lfw)[[:space:]][0-9]+$" > $2 # FAUX, ne supprime pas certain nom qui commence par les meme lettres...
+    printf "\033[01m$0: \033[32mLe fichier $2 a été généré.\n\033[0m"
 fi
