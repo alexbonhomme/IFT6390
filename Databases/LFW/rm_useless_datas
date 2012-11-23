@@ -1,0 +1,18 @@
+#!/bin/sh
+# Permet de supprimer tout les dossier qui contiène "n" images
+if [ $# -lt 1 ]
+then
+	printf "\033[31m"	# Met le text en rouge
+	echo "Nombre d'argument invalide !"	>&2
+	echo "Usage: $0 n [file_out]" >&2
+	printf "\033[0m"	# Retour au couleur par defaut
+	exit -1
+fi
+cat lfw-names.txt | grep -e "[[:space:]]$1$" | cut -f1 | sed "s/^/.\/lfw\//" | xargs rm -r
+
+if [ $# -gt 1 ]
+then
+    #sed "/[[:space:]]$1$/d" lfw-names.txt > $2
+    cat lfw-names.txt | grep "$(ls lfw)" > $2
+    printf "\033[35m$0: Le fichier $2 a été généré.\n\033[0m"
+fi
