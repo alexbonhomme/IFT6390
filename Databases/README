@@ -1,3 +1,7 @@
 Dans le dossier LFW se trouve un script nommé "rm_useless_datas" qui permet de supprimer les dossier qui ont "n" images.
+
+#edit 23 nov 2012
+Le script est buggé et ne sort pas la liste correct
+
 Cela permet de restrinde facilement l'ensemble... Celui-ci fesant ~200mo je n'ai pas tout mis sur bitbucket.
 La totalité est disponible ici : http://vis-www.cs.umass.edu/lfw/#download
