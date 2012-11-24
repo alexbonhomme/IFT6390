@@ -14,8 +14,8 @@ import sys
 # Parametres du script
 K = 1
 Theta = 0.5
-trainFile = "train.txt"
-testFile = "test.txt"
+trainFile = "./Databases/train.txt"
+testFile = "./Databases/test.txt"
 
 if( len(sys.argv) > 2 ):
 	for i in range(1, len(sys.argv), 2):
@@ -55,18 +55,22 @@ nbGoodResult3 = 0
 #storeData()
 #loadData()
 
+iDataTrain = eigen_model.compute_predictions( dataTest )
+resultKNN = eigen_model.compute_predictions( dataTest, "knn" )
+resultParzen = eigen_model.compute_predictions( dataTest, "parzen" )
+
 for i in range(0, int( dataTest.shape[1] )):
 
-	iDataTrain = eigen_model.compute_predictions( dataTest[:,i] )
-	if(dataTrainIndices[iDataTrain] == dataTestIndices[i]):
+	
+	if(dataTrainIndices[iDataTrain[i]] == dataTestIndices[i]):
 		nbGoodResult += 1
 		
-	resultKNN = eigen_model.compute_predictions( dataTest[:,i], "knn" )
-	if(resultKNN == dataTestIndices[i]):
+	
+	if(resultKNN[i] == dataTestIndices[i]):
 		nbGoodResult2 += 1
 		
-	resultParzen = eigen_model.compute_predictions( dataTest[:,i], "parzen" )
-	if(resultParzen == dataTestIndices[i]):
+	
+	if(resultParzen[i] == dataTestIndices[i]):
 		nbGoodResult3 += 1
 	
 	print "Classic method: "+ str( dataTrainIndices[iDataTrain] ) +" | KNN method: "+ str( resultKNN ) +" | KNN+Parzen method: "+ str( resultParzen ) +" | Expected: "+ str( dataTestIndices[i] ) +"\n" # +1 car l'index de la matrice commence a 0

@@ -23,7 +23,10 @@ class Eigenfaces (object):
         self.projectedTrainFaces = self.__doPCAandProjection( train_data )
     
     def compute_predictions(self, test_data, type_algo=""):
-        avgFace = np.mean(dataTest, axis=1)
+        avgFace = np.mean(test_data, axis=1)
+        
+        #TODO need loop to do projection
+        #
         projectedTestFace = self.__projectTestFace( test_data, self.eigenVectors, avgFace )
 
         if type_algo == "knn":
