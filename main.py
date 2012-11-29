@@ -14,13 +14,24 @@ import sys
 # Parametres du script
 K = 1
 Theta = 0.5
-trainFile = "./Databases/train.txt"
-testFile = "./Databases/test.txt"
+trainFile = "./Databases/train1.txt"
+testFile = "./Databases/test4.txt"
+
+if(len(sys.argv) > 1 and sys.argv[1] == "-h"):
+    print "Usage: main.py [OPTION]"
+    print "Options: \n\
+          -h\t\tPrint this message\n\
+          -k\t\tThe number of neighbors (default: 1)\n\
+          -theta\tThe gaussian kernel size (default: 0.5)\n\
+          -train\tThe train file\n\
+          -test\t\tThe test file\n"
+
+    sys.exit()
 
 if( len(sys.argv) > 2 ):
 	for i in range(1, len(sys.argv), 2):
 		if(sys.argv[i] == "-k"):
-			K = int( sys.argv[i+1] )
+		    K = int( sys.argv[i+1] )
 		
 		elif(sys.argv[i] == "-theta"):
 			Theta = float( sys.argv[i+1] )
@@ -55,22 +66,18 @@ nbGoodResult3 = 0
 #storeData()
 #loadData()
 
-iDataTrain = eigen_model.compute_predictions( dataTest )
-resultKNN = eigen_model.compute_predictions( dataTest, "knn" )
-resultParzen = eigen_model.compute_predictions( dataTest, "parzen" )
-
 for i in range(0, int( dataTest.shape[1] )):
 
-	
-	if(dataTrainIndices[iDataTrain[i]] == dataTestIndices[i]):
+	iDataTrain = eigen_model.compute_predictions( dataTest[:,i] )
+	if(dataTrainIndices[iDataTrain] == dataTestIndices[i]):
 		nbGoodResult += 1
-		
 	
-	if(resultKNN[i] == dataTestIndices[i]):
-		nbGoodResult2 += 1
-		
-	
-	if(resultParzen[i] == dataTestIndices[i]):
+	resultKNN = eigen_model.compute_predictions( dataTest[:,i], "knn" )
+	if(resultKNN == dataTestIndices[i]):
+	    nbGoodResult2 += 1
+
+	resultParzen = eigen_model.compute_predictions( dataTest[:,i], "parzen" )
+	if(resultParzen == dataTestIndices[i]):
 		nbGoodResult3 += 1
 	
 	print "Classic method: "+ str( dataTrainIndices[iDataTrain] ) +" | KNN method: "+ str( resultKNN ) +" | KNN+Parzen method: "+ str( resultParzen ) +" | Expected: "+ str( dataTestIndices[i] ) +"\n" # +1 car l'index de la matrice commence a 0
