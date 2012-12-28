@@ -28,6 +28,16 @@ class Main (object):
     
     #TODO trouver un nom plus subtile..?
     def main(self, textview=None):
+        
+        def print_output(text):
+            if textview != None:
+                buf = textview.get_buffer()
+                buf.insert_at_cursor(text)
+                textview.scroll_mark_onscreen(buf.get_insert())
+            else:
+                print text
+    
+    
         # Chargement des données
         dataTrain, dataTrainIndices = tools.loadImageData( self.trainFile )
 
@@ -68,12 +78,7 @@ class Main (object):
                 nbGoodResult3 += 1
 
             out_str = "Classic method: "+ str( dataTrainIndices[iDataTrain] ) +" | KNN method: "+ str( resultKNN ) +" | KNN+Parzen method: "+ str( resultParzen ) +" | Expected: "+ str( dataTestIndices[i] ) +"\n" # +1 car l'index de la matrice commence a 0
-            if textview != None:
-                buf = textview.get_buffer()
-                buf.insert_at_cursor(out_str)
-                textview.scroll_mark_onscreen(buf.get_insert())
-            else:
-                print out_str
+            print_output(out_str)
 
         res = (float(nbGoodResult) / float(dataTest.shape[1])) * 100.
         out_str = "\nAccuracy with classic method: %.3f" % res + "%\n"
@@ -81,51 +86,54 @@ class Main (object):
         out_str += "Accuracy with KNN method (k="+ str( self.K ) +"): %.3f" % res + "%\n"
         res = (nbGoodResult3 / float(dataTest.shape[1])) * 100.
         out_str += "Accuracy with KNN + Parzen window method (k="+ str( self.K ) +" theta="+ str( self.Theta ) +"): %.3f" % res + "%\n"
-        if textview != None:
-            buf = textview.get_buffer()
-            buf.insert_at_cursor(out_str)
-            textview.scroll_mark_onscreen(buf.get_insert())
-        else:
-            print out_str
+        print_output(out_str)
 
 #### FIN CLASSE MAIN ####################################
 
 # Si le script est appelé directement on execute se code
 if __name__ == "__main__":
+    from optparse import OptionParser
 
-    # Parametres du script
-    K = 1
-    Theta = 0.5
-    trainFile = "./Databases/train1.txt"
-    testFile = "./Databases/test4.txt"
+    # Options du script
+    parser = OptionParser()
+    parser.add_option("--trainfile", 
+                      dest="train_filename",
+                      help="train FILE", 
+                      default="./Databases/train1.txt",
+                      metavar="FILE")
+    
+    parser.add_option("--testfile", 
+                      dest="test_filename",
+                      help="test FILE", 
+                      default="./Databases/test4.txt",
+                      metavar="FILE")
+    
+    parser.add_option("-k",
+                      dest="k", 
+                      type="int",
+                      default=1,
+                      help="number of neighbors")
+    
+    parser.add_option("-t", "--theta",
+                      dest="theta",
+                      type="float",
+                      default=0.5,
+                      help="gaussian kernel size")         
+    
+    #TODO Inutile pour le moment mais implémenté par la suite
+    parser.set_defaults(verbose=True)
+    parser.add_option("-v", "--verbose", action="store_true", dest="verbose", help="print status messages to stdout")
+    parser.add_option("-q", "--quiet", action="store_false", dest="verbose", help="don't print status messages to stdout")
 
-    if(len(sys.argv) > 1 and sys.argv[1] == "-h"):
-        print "Usage: main.py [OPTION]"
-        print "Options: \n\
-              -h\t\tPrint this message\n\
-              -k\t\tThe number of neighbors (default: 1)\n\
-              -theta\tThe gaussian kernel size (default: 0.5)\n\
-              -train\tThe train file\n\
-              -test\t\tThe test file\n"
+    (opts, args) = parser.parse_args()
+    
+    # On ne traite que les options connu (parsées dans opts)
+    trainFile = opts.train_filename
+    testFile = opts.test_filename
+    K = opts.k
+    Theta = opts.theta
 
-        sys.exit()
-
-    # Traitement des arguments du script
-    if( len(sys.argv) > 2 ):
-	    for i in range(1, len(sys.argv), 2):
-		    if(sys.argv[i] == "-k"):
-		        K = int( sys.argv[i+1] )
-		
-		    elif(sys.argv[i] == "-theta"):
-			    Theta = float( sys.argv[i+1] )
-
-		    elif(sys.argv[i] == "-train"):
-			    trainFile = sys.argv[i+1]
-
-		    elif(sys.argv[i] == "-test"):
-			    testFile = sys.argv[i+1]
-
-    # Début du programme
+    #### Début du programme
     faceReco = Main( K, Theta, trainFile, testFile )
     faceReco.main()
 
