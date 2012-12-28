@@ -5,18 +5,19 @@
 # Reconnaissance par "Eigenfaces"
 #
 ###################################
+import tools
+import sys
+import logging as log
+
 from eigenfaces import Eigenfaces
 from pca import PCA
 from knn import KNN
 from parzen import ParzenWindows
 
-import tools
-import sys
-
 #### DEBUT CLASSE MAIN ####################################
 class Main (object):
 
-    def __init__(self, K=1, Theta=0.5, trainFile="", testFile=""):
+    def __init__(self, K=1, Theta=0.5, trainFile="", testFile="", debug_mode=True):
         self.K = K
         self.Theta = Theta
         
@@ -29,6 +30,12 @@ class Main (object):
             self.testFile = "./Databases/test4.txt"
         else:
             self.testFile = testFile
+        
+        # logger pour debbug
+        if debug_mode:
+            log.basicConfig(stream=sys.stderr, level=log.DEBUG)
+        else:
+            log.basicConfig(stream=sys.stderr, level=log.INFO)
     
     #TODO trouver un nom plus subtile..?
     def main(self, textview=None):
@@ -82,11 +89,12 @@ class Main (object):
         #loadData()
 
         for i in range(0, int( dataTest.shape[1] )):
+            #TODO faire ne projection matriciel
+            proj = pca_model.getProjection( dataTest[:,i] )
 
             # k = 1, pour réference
             # on force k
             knn_model.setK( 1 )
-            proj = pca_model.getProjection( dataTest[:,i] )
             result1NN = knn_model.compute_predictions( proj )
             if(result1NN == dataTestIndices[i]):
                 nbGoodResult += 1
@@ -99,7 +107,7 @@ class Main (object):
                 nbGoodResult2 += 1
 
             #
-            resultParzen = parzen_model.compute_predictions( proj, self.K )
+            resultParzen = parzen_model.compute_predictions( proj )
             if(resultParzen == dataTestIndices[i]):
                 nbGoodResult3 += 1
 
@@ -111,7 +119,7 @@ class Main (object):
         res = (nbGoodResult2 / float(dataTest.shape[1])) * 100.
         out_str += "Accuracy with KNN method (k="+ str( self.K ) +"): %.3f" % res + "%\n"
         res = (nbGoodResult3 / float(dataTest.shape[1])) * 100.
-        out_str += "Accuracy with KNN + Parzen window method (k="+ str( self.K ) +" theta="+ str( self.Theta ) +"): %.3f" % res + "%\n"
+        out_str += "Accuracy with KNN + Parzen window method (theta="+ str( self.Theta ) +"): %.3f" % res + "%\n"
         print_output(out_str)
 
 #### FIN CLASSE MAIN ####################################
@@ -145,8 +153,7 @@ if __name__ == "__main__":
                       type="float",
                       default=0.5,
                       help="gaussian kernel size")         
-    
-    #TODO Inutile pour le moment mais implémenté par la suite
+
     parser.set_defaults(verbose=True)
     parser.add_option("-v", "--verbose", action="store_true", dest="verbose", help="print status messages to stdout")
     parser.add_option("-q", "--quiet", action="store_false", dest="verbose", help="don't print status messages to stdout")
@@ -158,8 +165,9 @@ if __name__ == "__main__":
     testFile = opts.test_filename
     K = opts.k
     Theta = opts.theta
+    debug_mode = opts.verbose
 
     #### Début du programme
-    faceReco = Main( K, Theta, trainFile, testFile )
+    faceReco = Main( K, Theta, trainFile, testFile, debug_mode=debug_mode )
     faceReco.main()
 

@@ -7,9 +7,12 @@ import pygtk
 pygtk.require('2.0')
 import gtk
 
+import sys
+import logging as log
+
 class Gui:
 
-    def __init__(self):
+    def __init__(self, debug_mode=False):
     
         self.GUI_VERSION = "0.1"
     
@@ -19,6 +22,14 @@ class Gui:
     
         # On construit la fenetre principale
         self.buildDisplay()
+        
+        #debug
+        # logger pour debbug
+        self.debug_mode = debug_mode
+        if self.debug_mode:
+            log.basicConfig(stream=sys.stderr, level=log.DEBUG)
+        else:
+            log.basicConfig(stream=sys.stderr, level=log.INFO)
 
     # Contruction de l'interface
     def buildDisplay(self):
@@ -162,7 +173,7 @@ class Gui:
         
             print "> Run K-PPV with", self.K, "neigbours...\n"
             
-            faceReco = MainConsole.Main( self.K )
+            faceReco = MainConsole.Main( self.K, debug_mode=self.debug_mode )
             # On thread l'app pour le ne pas figer le gui
             t = Thread(target=faceReco.main, args=(self.textview,))
             t.start()# On demarre le thread
@@ -194,5 +205,14 @@ class Gui:
 
 # Si le script est directement executé (pas importé) on lance l'interface graphique
 if __name__ == "__main__":
-    myGui = Gui()
+    from optparse import OptionParser
+
+    # Options du script
+    parser = OptionParser()
+    parser.set_defaults(verbose=True)
+    parser.add_option("-v", "--verbose", action="store_true", dest="verbose", help="print status messages to stdout")
+    parser.add_option("-q", "--quiet", action="store_false", dest="verbose", help="don't print status messages to stdout")  
+    (opts, args) = parser.parse_args()
+
+    myGui = Gui( debug_mode=opts.verbose )
     myGui.main()

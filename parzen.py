@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import numpy as np
 import tools
+import logging as log
 
 class ParzenWindows (object):
 
@@ -24,9 +25,9 @@ class ParzenWindows (object):
     def compute_predictions(self, test_set, kNN=None):
         if kNN != None:
             print kNN
-            k = kNN
+            k = kNN # on ne regarde que les k plus proche (like KNN)
         else:
-            k = self.nClass
+            k = self.train_targets.shape[0] # On compare a tout les points
 
         #vecteur de sortie
         c = np.zeros(self.nClass)
@@ -61,7 +62,8 @@ class ParzenWindows (object):
 	        if(not np.isnan(voisins[i])):
 		        c[ voisins[i]-1 ] += dists[ i ] #-1 car les etiquettes commences a 1 mais le tab a zero
 
-        print c
+        #DEBBUG
+        log.debug("Parzen preds: " + str(c)) 
 
         return np.argmax( c ) + 1
 

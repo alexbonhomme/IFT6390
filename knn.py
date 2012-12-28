@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import tools
 import numpy as np
+import logging as log
 
 class KNN (object):
 
@@ -40,7 +41,7 @@ class KNN (object):
 		        dists[j] = dist[i] # distance
 
         ## DEBUG
-        print "Voisins:\t"+ str(voisins)
+        #print "Voisins:\t"+ str(voisins)
 
         # On somme le nombre de voisin de la meme classe
         # pour trouver quelle est la classe majoritaire
@@ -50,7 +51,7 @@ class KNN (object):
 
 
         ## DEBUG
-        print "C:\t\t"+ str(c)
+        log.debug("KNN preds: " + str(c)) 
 
         return np.argmax( c ) + 1
 

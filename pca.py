@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import numpy as np
+import logging as log
 
 class PCA (object):
 
@@ -24,9 +25,11 @@ class PCA (object):
         # Reduction du nombre de eigenface à K
         #TODO Calculer le coefficient optimal
         #TODO uniliser le parametre n_eigen
-        k = A.shape[1] / 1.5 # Nombre d'image "entrainé" -1
-        print "Dimentionnality: "+ str(int(k)) +" - Before: "+ str(A.shape[1])
+        k = A.shape[1] # Nombre d'image "entrainé" -1
+        log.debug("Dimentionnality: "+ str(int(k)) +" - Before: "+ str(A.shape[1]))
+        
         self.eigenVectors = U[:, :int(k)]
+        log.debug("self.eigenVectors shape:" + str(self.eigenVectors.shape) )
 
         # Calcul des eigenvalues
         self.eigenValues = np.square(S)
