@@ -6,6 +6,10 @@
 #
 ###################################
 from eigenfaces import Eigenfaces
+from pca import PCA
+from knn import KNN
+from parzen import ParzenWindows
+
 import tools
 import sys
 
@@ -29,6 +33,7 @@ class Main (object):
     #TODO trouver un nom plus subtile..?
     def main(self, textview=None):
         
+        # Remplace "print"
         def print_output(text):
             if textview != None:
                 buf = textview.get_buffer()
@@ -40,15 +45,28 @@ class Main (object):
     
         # Chargement des données
         dataTrain, dataTrainIndices = tools.loadImageData( self.trainFile )
-
-        # eigen model
-        eigen_model = Eigenfaces( self.Theta, self.K )
-        eigen_model.train(dataTrain, dataTrainIndices)
+    
+        # tranformation pca
+        pca_model = PCA( dataTrain )
+        pca_model.transform() # on transforme les donné dans un le "eigen space"
+        
+        # Calcul du nombre de class
+        #TODO Devrait peut etre etre inclu dans le fichier de test... maybe
+       	nClass = tools.countClass( dataTrainIndices )
+        
+        # On build le model pour recherche par KNN
+        knn_model = KNN( pca_model.getWeightsVectors(), dataTrainIndices, nClass, self.K )
+        
+        # On build le model pour Parzen
+        parzen_model = ParzenWindows( pca_model.getWeightsVectors(), dataTrainIndices, nClass, self.Theta )
 
         ## TEST ###########################
         #TODO Toute cette partie est a revoir pour sortir des graphes
         # de train, validation, test
         dataTest, dataTestIndices = tools.loadImageData( self.testFile )
+        
+        # On projet les data de test dans eigen space
+        #dataTest = pca_model.getProjection( dataTest )
 
         nbGoodResult = 0
         nbGoodResult2 = 0 # compteurs de bons résultats
@@ -65,19 +83,27 @@ class Main (object):
 
         for i in range(0, int( dataTest.shape[1] )):
 
-            iDataTrain = eigen_model.compute_predictions( dataTest[:,i] )
-            if(dataTrainIndices[iDataTrain] == dataTestIndices[i]):
+            # k = 1, pour réference
+            # on force k
+            knn_model.setK( 1 )
+            proj = pca_model.getProjection( dataTest[:,i] )
+            result1NN = knn_model.compute_predictions( proj )
+            if(result1NN == dataTestIndices[i]):
                 nbGoodResult += 1
 
-            resultKNN = eigen_model.compute_predictions( dataTest[:,i], "knn" )
+            # k = n
+            # replace k a ca position initial
+            knn_model.setK( self.K )
+            resultKNN = knn_model.compute_predictions( proj )
             if(resultKNN == dataTestIndices[i]):
                 nbGoodResult2 += 1
 
-            resultParzen = eigen_model.compute_predictions( dataTest[:,i], "parzen" )
+            #
+            resultParzen = parzen_model.compute_predictions( proj, self.K )
             if(resultParzen == dataTestIndices[i]):
                 nbGoodResult3 += 1
 
-            out_str = "Classic method: "+ str( dataTrainIndices[iDataTrain] ) +" | KNN method: "+ str( resultKNN ) +" | KNN+Parzen method: "+ str( resultParzen ) +" | Expected: "+ str( dataTestIndices[i] ) +"\n" # +1 car l'index de la matrice commence a 0
+            out_str = "Classic method: "+ str( result1NN ) +" | KNN method: "+ str( resultKNN ) +" | KNN+Parzen method: "+ str( resultParzen ) +" | Expected: "+ str( dataTestIndices[i] ) +"\n" # +1 car l'index de la matrice commence a 0
             print_output(out_str)
 
         res = (float(nbGoodResult) / float(dataTest.shape[1])) * 100.

@@ -78,3 +78,23 @@ def euclide_mat(x, Y):
 	    out.append( np.sqrt(deltaSq) )
 
     return np.array( out )
+
+"""
+    Noyau gaussien
+"""
+def gaussianKernel(X, x, theta):
+    return np.exp( -((X - x)**2) / (theta**2) )
+
+#TODO check this
+def softKernelDist( dist, d=2, theta=0.5 ):
+    return (1/( ((2*np.pi)**(d/2)) * (theta**d) )) * np.exp((-1/2) * ((dist) / (theta**2)))
+  
+"""
+    Compte le nombre de classe a partir du vecteur de labels/targets
+"""
+def countClass( targets ):
+    m = []
+    for i in range(0, int( targets.shape[0] )):
+        if( not targets[i] in m ):
+            m.append( targets[i] )
+    return np.size(m)
