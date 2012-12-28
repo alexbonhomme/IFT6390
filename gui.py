@@ -1,5 +1,7 @@
 #! /usr/bin/env python2
 # -*- coding: utf-8 -*-
+import main as MainConsole
+from threading import Thread
 
 import pygtk
 pygtk.require('2.0')
@@ -38,7 +40,7 @@ class Gui:
 
         # menu de selection des algo 
         lab_menu1 = gtk.Label("Algorithme a utiliser :")
-        lab_menu1.set_alignment(0, 0)
+        #lab_menu1.set_alignment(0, 0)
         lab_menu1.show()
         
         menu1 = gtk.OptionMenu()
@@ -57,14 +59,18 @@ class Gui:
         menu1.set_menu(menu_content)
         menu1.show()
         
+        box_select = gtk.VBox(True, 0)
+        box_select.show()
+        frame_0 = gtk.Frame("")
+        frame_0.add(box_select)
+        frame_0.show()
+        main_box.pack_start(frame_0, True, True, 10)
+        
         box1 = gtk.HBox(True, 0)
         box1.pack_start(lab_menu1, True, True, 5)
-        box1.pack_start(menu1, True, True, 5)
+        box1.pack_start(menu1, False, False, 5)
         box1.show()
-        frame_0 = gtk.Frame("")
-        frame_0.add(box1)
-        frame_0.show()
-        main_box.pack_start(frame_0, False, False, 10)
+        box_select.pack_start(box1, False, False, 10)
         
         # Cette box contient troutes les box de parametre (kppv, nnet, etc..)
         # mais certaines sont masquées
@@ -102,12 +108,31 @@ class Gui:
         box_param.pack_start(self.box_kppv, True, True, 5)
         self.box_kppv.show()
         
+        # output
+        box2 = gtk.HBox(True, 0)
+        box2.show()
+        frame_2 = gtk.Frame("Output")
+        frame_2.add(box2)
+        frame_2.show()
+        main_box.pack_start(frame_2, True, True, 10)
+        
+
+        scroll_win = gtk.ScrolledWindow()
+        scroll_win.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
+        scroll_win.set_size_request(1000, 100)
+        self.textview = gtk.TextView()
+        self.textview.set_editable(False)
+        self.textview.show()
+        scroll_win.add(self.textview)
+        scroll_win.show()
+        box2.pack_start(scroll_win, False, False, 5)
+        
         # Bottom frame
-        bt_run = gtk.Button("Exécuter l'algorithme", gtk.STOCK_EXECUTE)
-        bt_run.connect("clicked", self.run, None)
-        bt_run.show();
+        self.bt_run = gtk.Button("Exécuter l'algorithme", gtk.STOCK_EXECUTE)
+        self.bt_run.connect("clicked", self.run, None)
+        self.bt_run.show();
         box3 = gtk.HBox(True, 0)
-        box3.pack_start(bt_run, True, True, 0)
+        box3.pack_start(self.bt_run, True, True, 0)
         box3.show()
         main_box.pack_start(box3, True, True, 0)
 
@@ -130,10 +155,27 @@ class Gui:
     
     # Callback functions
     def run(self, widget, data):
+        # Execution de l'algo avec kppv
         if self.algoType == "kppv":
-            print "Run K-PPV with", self.K, "neigbours."
+            # on desactive le bt durant le script
+            self.bt_run.set_sensitive(False)
+        
+            print "> Run K-PPV with", self.K, "neigbours...\n"
+            
+            faceReco = MainConsole.Main( self.K )
+            # On thread l'app pour le ne pas figer le gui
+            t = Thread(target=faceReco.main, args=(self.textview,))
+            t.start()# On demarre le thread
+            t.join() # On attends la fin du thread
+            
+            print "> Ending"
+            
+            # reactivaton du bt
+            self.bt_run.set_sensitive(True)
+            
+        # Execution de l'algo avec reseau de neurones    
         elif self.algoType == "nnet":
-            print "Run NNET"
+            print "> Run NNET\n"
     
     def updateAlgoType(self, widget, algoType):
         self.algoType = algoType
