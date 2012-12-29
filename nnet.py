@@ -125,7 +125,7 @@ class NeuralNetwork (object):
                 test_out.append([R_test, Err_test])
             
             # Affichage
-            log.info("Epoch %4d" % k + "- Temps de calcul = %.3fs" % float(t2-t1) + "- Cout optimisé total = %.3f" % L_total) 
+            log.info("Epoch %4d" % k + " - Temps de calcul = %.3fs" % float(t2-t1) + " - Cout optimisé total = %.3f" % L_total) 
             log.info("Train:\tErreur de classification = %3.1f" % (Err*100.) + "%" + " - Cout moyen = %.4f" % R) 
             #print "Valid:\tErreur de classification = %3.1f" % (Err_valid*100.), "%" + " - Cout moyen = %.4f" % R_valid
             #print "Test: \tErreur de classification = %3.1f" % (Err_test*100.),  "%" + " - Cout moyen = %.4f" % R_test
@@ -203,6 +203,7 @@ class NeuralNetwork (object):
     def compute_classif_error(self, data_set):
         features = data_set[:,:-1]
         targets = data_set[:,-1].astype(int)
+        print features.shape
         
         # On calcule les prédiction
         pred = np.argmax(self.compute_predictions(features), axis=1)
@@ -215,7 +216,7 @@ class NeuralNetwork (object):
     # Propagation avant
     # return : os, oa, hs, ha
     def fprop(self, features):
-
+        
         # Couche cachée
         ha = np.dot(self.W1, features.T) + self.b1
         hs = np.tanh( ha ) 

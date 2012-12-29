@@ -28,11 +28,11 @@ class Main (object):
         self.Theta = Theta
         
         # NNET
-        self.batch_size = int(batch_size)
-        self.n_epoch = int(n_epoch)
-        self.n_hidden = int(n_hidden)
-        self.lr = float(lr)
-        self.wd = float(wd)
+        self.batch_size = batch_size
+        self.n_epoch = n_epoch
+        self.n_hidden = n_hidden
+        self.lr = lr
+        self.wd = wd
         
         # fichiers de train
         if trainFile == "":
@@ -97,6 +97,7 @@ class Main (object):
             for i in range(0, int( dataTest.shape[1] )):
                 #TODO faire ne projection matriciel
                 proj = pca_model.getProjection( dataTest[:,i] )
+                print proj.shape
 
                 # k = 1, pour réference
                 # on force k
@@ -139,6 +140,31 @@ class Main (object):
             # On build et on entraine le model pour recherche par KNN
             nnet_model = NeuralNetwork( dataTrain.shape[0], self.n_hidden, nClass, self.lr, self.wd )
             nnet_model.train( train_set, self.n_epoch, self.batch_size )
+            
+            ## TEST ###########################
+            #TODO Toute cette partie est a revoir pour sortir des graphes
+            # de train, validation, test
+            dataTest, dataTestIndices = tools.loadImageData( self.testFile )
+
+            # compteurs de bons résultats   
+            nbGoodResult = 0
+
+            for i in range(0, int( dataTest.shape[1] )):
+                #TODO faire ne projection matriciel
+                proj = pca_model.getProjection( dataTest[:,i] )
+                proj = proj.reshape(1, proj.shape[0])
+
+                #
+                resultNNET = np.argmax(nnet_model.compute_predictions( proj ), axis=1)[0] + 1
+                if(resultNNET == dataTestIndices[i]):
+                    nbGoodResult += 1
+
+                out_str = "Result: "+ str( resultNNET ) + " | Expected: "+ str( dataTestIndices[i] ) +"\n" # +1 car l'index de la matrice commence a 0
+                print_output(out_str)
+
+            res = (float(nbGoodResult) / float(dataTest.shape[1])) * 100.
+            out_str = "\nAccuracy : %.3f" % res + "%\n"
+            print_output(out_str)
             
 
 #### FIN CLASSE MAIN ####################################

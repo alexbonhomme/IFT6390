@@ -18,7 +18,16 @@ class Gui:
     
         # Parametre pour execution du programme principal
         self.algoType = "kppv" # Par défaut
-        self.K = 1 # voisinage pour kppv    
+        
+        # voisinage pour kppv
+        self.K = 1    
+        
+        # paremetres nnet (par default)
+        self.batch_size = 1
+        self.n_epoch = 100
+        self.n_hidden = 10
+        self.lr = .001
+        self.wd = .0
     
         # On construit la fenetre principale
         self.buildDisplay()
@@ -38,11 +47,8 @@ class Gui:
         self.mainWindow.set_title("Reconnaissance facial GUI - v" + self.GUI_VERSION)
 
         # Signal de fermeture (croix, fermer, etc..)
-        self.mainWindow.connect("delete_event", self.evnmt_delete)
-
-        # Cet événement se produit lorsqu'on invoque gtk_widget_destroy() sur
-        # la fenêtre ou lorsque le gestionnaire du signal "delete" renvoie FALSE.
-        self.mainWindow.connect("destroy", self.destroy)
+        self.mainWindow.connect("destroy", lambda wid: gtk.main_quit())
+        self.mainWindow.connect("delete_event", lambda a1,a2: gtk.main_quit())
 
         # box principale
         main_box = gtk.VBox(True, 0)
@@ -93,18 +99,41 @@ class Gui:
         main_box.pack_start(frame_1, True, True, 10)
 
         # Box nnet
-        lab_1 = gtk.Label("Ici NNET")
-        lab_1.show()
         self.box_nnet = gtk.HBox(True, 0)
+        lab_1 = gtk.Label("Nombre d'époques :")
+        lab_1.set_justify(gtk.JUSTIFY_LEFT)
+        lab_1.show()
+        ajt_k = gtk.Adjustment(self.n_epoch, 1.0, 100000.0, 1.0, 5.0, 0.0)
+        box_incr = gtk.SpinButton(ajt_k, 0, 0)
+        box_incr.set_numeric(True)
+        box_incr.set_wrap(False)
+        box_incr.set_snap_to_ticks(True)
+        box_incr.connect("value-changed", self.updateParam, "Epoch_value")
+        box_incr.show()
         self.box_nnet.pack_start(lab_1, True, True, 5)
+        self.box_nnet.pack_start(box_incr, True, True, 5)
+        
+        lab_1 = gtk.Label("Nombre de neurones :")
+        lab_1.set_justify(gtk.JUSTIFY_LEFT)
+        lab_1.show()
+        ajt_k = gtk.Adjustment(self.n_hidden, 1.0, 10000.0, 1.0, 5.0, 0.0)
+        box_incr = gtk.SpinButton(ajt_k, 0, 0)
+        box_incr.set_numeric(True)
+        box_incr.set_wrap(False)
+        box_incr.set_snap_to_ticks(True)
+        box_incr.connect("value-changed", self.updateParam, "Hid_value")
+        box_incr.show()
+        self.box_nnet.pack_start(lab_1, True, True, 5)
+        self.box_nnet.pack_start(box_incr, True, True, 5)
+        
         box_param.pack_start(self.box_nnet, True, True, 5)
         
         # Box kppv
-        lab_2 = gtk.Label("Nombre de voisins a consulter :")
-        lab_2.set_justify(gtk.JUSTIFY_LEFT)
-        lab_2.show()
+        lab_1 = gtk.Label("Nombre de voisins a consulter :")
+        lab_1.set_justify(gtk.JUSTIFY_LEFT)
+        lab_1.show()
         
-        ajt_k = gtk.Adjustment(1.0, 1.0, 999.0, 1.0, 5.0, 0.0)
+        ajt_k = gtk.Adjustment(self.K, 1.0, 999.0, 1.0, 5.0, 0.0)
         box_incr = gtk.SpinButton(ajt_k, 0, 0)
         box_incr.set_numeric(True)
         box_incr.set_wrap(False)
@@ -113,7 +142,7 @@ class Gui:
         box_incr.show()
         
         self.box_kppv = gtk.HBox(True, 0)
-        self.box_kppv.pack_start(lab_2, True, True, 5)
+        self.box_kppv.pack_start(lab_1, True, True, 5)
         self.box_kppv.pack_start(box_incr, True, True, 5)
         
         box_param.pack_start(self.box_kppv, True, True, 5)
@@ -141,7 +170,9 @@ class Gui:
         # Bottom frame
         self.bt_run = gtk.Button("Exécuter l'algorithme", gtk.STOCK_EXECUTE)
         self.bt_run.connect("clicked", self.run, None)
-        self.bt_run.show();
+        self.bt_run.set_flags(gtk.CAN_DEFAULT)
+        
+        self.bt_run.show()
         box3 = gtk.HBox(True, 0)
         box3.pack_start(self.bt_run, True, True, 0)
         box3.show()
@@ -149,58 +180,47 @@ class Gui:
 
         # Placement dans la fenetre principale
         self.mainWindow.add(main_box)
+        self.bt_run.grab_default()  #Focus sur le bt par default
         self.mainWindow.show()
 
     # Main loop
     def main(self):
         gtk.main()
         return 0
-
-    # Events
-    def evnmt_delete(self, widget, event, data=None):
-        return False
-
-    def destroy(self, widget, data=None):
-        print "Fin du programme."
-        gtk.main_quit()
     
     # Callback functions
     def run(self, widget, data):
+        # on desactive le bt durant le script
+        self.bt_run.set_sensitive(False)
+    
         # Execution de l'algo avec kppv
         if self.algoType == "kppv":
-            # on desactive le bt durant le script
-            self.bt_run.set_sensitive(False)
-        
+                    
             log.info("> Run K-PPV with" + str(self.K) + "neigbours...\n")
             
-            faceReco = MainConsole.Main( self.K, debug_mode=self.debug_mode )
+            faceReco = MainConsole.Main( K=self.K, debug_mode=self.debug_mode )
             # On thread l'app pour le ne pas figer le gui
             t = Thread(target=faceReco.main, args=("KNN", self.textview))
             t.start()# On demarre le thread
             t.join() # On attends la fin du thread
             
-            log.info("> Ending") 
-            
-            # reactivaton du bt
-            self.bt_run.set_sensitive(True)
+            log.info("> Ending")
             
         # Execution de l'algo avec reseau de neurones    
         elif self.algoType == "nnet":
-            # on desactive le bt durant le script
-            self.bt_run.set_sensitive(False)
         
             log.info("> Run NNET with \n")
             
-            faceReco = MainConsole.Main( self.K, debug_mode=self.debug_mode )
+            faceReco = MainConsole.Main( n_epoch=self.n_epoch, debug_mode=self.debug_mode )
             # On thread l'app pour le ne pas figer le gui
             t = Thread(target=faceReco.main, args=("NNET", self.textview))
             t.start()# On demarre le thread
             t.join() # On attends la fin du thread
             
             log.info("> Ending")
-            
-            # reactivaton du bt
-            self.bt_run.set_sensitive(True)
+        
+        # reactivaton du bt
+        self.bt_run.set_sensitive(True)
     
     def updateAlgoType(self, widget, algoType):
         self.algoType = algoType
@@ -215,7 +235,11 @@ class Gui:
     def updateParam(self, widget, data):
         if data == "K_value":
             self.K = widget.get_value_as_int()
-            
+        elif data == "Epoch_value":
+            self.n_epoch = widget.get_value_as_int()
+        elif data == "Hid_value":
+            self.n_hidden = widget.get_value_as_int()
+        
 
 # Si le script est directement executé (pas importé) on lance l'interface graphique
 if __name__ == "__main__":
