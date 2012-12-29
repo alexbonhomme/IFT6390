@@ -97,7 +97,6 @@ class Main (object):
             for i in range(0, int( dataTest.shape[1] )):
                 #TODO faire ne projection matriciel
                 proj = pca_model.getProjection( dataTest[:,i] )
-                print proj.shape
 
                 # k = 1, pour réference
                 # on force k

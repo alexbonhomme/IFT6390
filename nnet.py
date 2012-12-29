@@ -203,7 +203,6 @@ class NeuralNetwork (object):
     def compute_classif_error(self, data_set):
         features = data_set[:,:-1]
         targets = data_set[:,-1].astype(int)
-        print features.shape
         
         # On calcule les prédiction
         pred = np.argmax(self.compute_predictions(features), axis=1)
