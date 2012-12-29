@@ -10,7 +10,6 @@ import sys
 import logging as log
 import numpy as np
 
-from eigenfaces import Eigenfaces
 from pca import PCA
 from knn import KNN
 from parzen import ParzenWindows

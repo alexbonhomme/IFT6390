@@ -189,7 +189,7 @@ class Gui:
             # on desactive le bt durant le script
             self.bt_run.set_sensitive(False)
         
-            print "> Run NNET with \n"
+            log.info("> Run NNET with \n")
             
             faceReco = MainConsole.Main( self.K, debug_mode=self.debug_mode )
             # On thread l'app pour le ne pas figer le gui
@@ -197,7 +197,7 @@ class Gui:
             t.start()# On demarre le thread
             t.join() # On attends la fin du thread
             
-            print "> Ending"
+            log.info("> Ending")
             
             # reactivaton du bt
             self.bt_run.set_sensitive(True)
