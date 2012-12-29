@@ -171,11 +171,29 @@ class Gui:
             # on desactive le bt durant le script
             self.bt_run.set_sensitive(False)
         
-            print "> Run K-PPV with", self.K, "neigbours...\n"
+            log.info("> Run K-PPV with" + str(self.K) + "neigbours...\n")
             
             faceReco = MainConsole.Main( self.K, debug_mode=self.debug_mode )
             # On thread l'app pour le ne pas figer le gui
-            t = Thread(target=faceReco.main, args=(self.textview,))
+            t = Thread(target=faceReco.main, args=("KNN", self.textview))
+            t.start()# On demarre le thread
+            t.join() # On attends la fin du thread
+            
+            log.info("> Ending") 
+            
+            # reactivaton du bt
+            self.bt_run.set_sensitive(True)
+            
+        # Execution de l'algo avec reseau de neurones    
+        elif self.algoType == "nnet":
+            # on desactive le bt durant le script
+            self.bt_run.set_sensitive(False)
+        
+            print "> Run NNET with \n"
+            
+            faceReco = MainConsole.Main( self.K, debug_mode=self.debug_mode )
+            # On thread l'app pour le ne pas figer le gui
+            t = Thread(target=faceReco.main, args=("NNET", self.textview))
             t.start()# On demarre le thread
             t.join() # On attends la fin du thread
             
@@ -183,10 +201,6 @@ class Gui:
             
             # reactivaton du bt
             self.bt_run.set_sensitive(True)
-            
-        # Execution de l'algo avec reseau de neurones    
-        elif self.algoType == "nnet":
-            print "> Run NNET\n"
     
     def updateAlgoType(self, widget, algoType):
         self.algoType = algoType

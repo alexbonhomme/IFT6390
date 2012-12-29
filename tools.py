@@ -98,3 +98,19 @@ def countClass( targets ):
         if( not targets[i] in m ):
             m.append( targets[i] )
     return np.size(m)
+
+"""
+    Non linéarité de type softmax
+"""
+def softmax(x):
+    e = np.exp(x)
+    return e / np.sum( e )
+
+def softmaxMat(X):
+    out = np.zeros(X.shape)
+    for i in xrange(X.shape[1]):
+        e = np.exp(X[:,i])
+        out[:,i] = e / np.sum( e )
+    
+    return out
+
