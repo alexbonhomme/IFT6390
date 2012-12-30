@@ -170,55 +170,109 @@ class Main (object):
 
 # Si le script est appelé directement on execute se code
 if __name__ == "__main__":
-    from optparse import OptionParser
+    import argparse
 
     # Options du script
-    parser = OptionParser()
-    parser.add_option("--trainfile", 
+    parser = argparse.ArgumentParser(description='Facial recognition')
+    
+    parser.set_defaults(verbose=True)
+    parser.add_argument("-v", "--verbose", action="store_true", dest="verbose", help="print status messages to stdout")
+    parser.add_argument("-q", "--quiet", action="store_false", dest="verbose", help="don't print status messages to stdout")
+
+    parser.add_argument("--trainfile", 
                       dest="train_filename",
                       help="train FILE", 
                       default="./Databases/train1.txt",
                       metavar="FILE")
     
-    parser.add_option("--testfile", 
+    parser.add_argument("--testfile", 
                       dest="test_filename",
                       help="test FILE", 
                       default="./Databases/test4.txt",
                       metavar="FILE")
     
-    parser.add_option("-k",
-                      dest="k", 
-                      type="int",
-                      default=1,
-                      help="number of neighbors")
+    # sous parseur pour knn et nnet
+    subparsers = parser.add_subparsers(title='Algorythms',
+                                       description='Type of algorythm tou can use.',
+                                       dest='algo_type')
+    # KNN parser
+    parser_knn = subparsers.add_parser('knn',
+                                       help='use the k nearest neighbors algorythm',
+                                       description='K Nearest Neighbors algorythm')
+    parser_knn.add_argument("-k",
+                            dest="k", 
+                            type=int,
+                            default=1,
+                            help="number of neighbors")
     
-    parser.add_option("-t", "--theta",
-                      dest="theta",
-                      type="float",
-                      default=0.5,
-                      help="gaussian kernel size")         
+    parser_knn.add_argument("-t", "--theta",
+                            dest="theta",
+                            type=float,
+                            default=0.5,
+                            help="gaussian kernel size")
+    
+    # NNET parser
+    parser_nnet = subparsers.add_parser('nnet',
+                                        help='use a neural network algorythm',
+                                        description='Neural Network algorythm')
+    parser_nnet.add_argument("--epoch",
+                            dest="n_epoch", 
+                            type=int,
+                            default=100,
+                            help="number of train epoch",
+                            metavar="N")
+    
+    parser_nnet.add_argument("--hid",
+                            dest="n_hidden", 
+                            type=int,
+                            default=10,
+                            help="number of hidden neurons",
+                            metavar="N")
+    
+    parser_nnet.add_argument("--batch",
+                            dest="batch_size", 
+                            type=int,
+                            default=1,
+                            help="size of the batch",
+                            metavar="N")
+    
+    parser_nnet.add_argument("--lr",
+                            dest="lr", 
+                            type=float,
+                            default=0.001,
+                            help="learning rate",
+                            metavar="NU")
 
-    parser.set_defaults(verbose=True)
-    parser.add_option("-v", "--verbose", action="store_true", dest="verbose", help="print status messages to stdout")
-    parser.add_option("-q", "--quiet", action="store_false", dest="verbose", help="don't print status messages to stdout")
+    parser_nnet.add_argument("--wd", "--L2",
+                            dest="wd", 
+                            type=float,
+                            default=0.0,
+                            help="weight decay (L2 penality)",
+                            metavar="ALPHA")
 
-    parser.add_option("--type",
-                      dest="algo_type", 
-                      type="string",
-                      default="KNN",
-                      help="algorythm to use")
-
-    (opts, args) = parser.parse_args()
+    # on parse la commande
+    args = parser.parse_args()
     
     # On ne traite que les options connu (parsées dans opts)
-    trainFile = opts.train_filename
-    testFile = opts.test_filename
-    K = opts.k
-    Theta = opts.theta
-    debug_mode = opts.verbose
-    algo_type = opts.algo_type.upper()
+    trainFile = args.train_filename
+    testFile = args.test_filename
+    debug_mode = args.verbose
+    algo_type = args.algo_type.upper()
 
     #### Début du programme
-    faceReco = Main( K=K, Theta=Theta, trainFile=trainFile, testFile=testFile, debug_mode=debug_mode )
-    faceReco.main( algo=algo_type )
+    if algo_type == "KNN":
+        K = args.k
+        Theta = args.theta
+        faceReco = Main( K=K, Theta=Theta, trainFile=trainFile, testFile=testFile, debug_mode=debug_mode )
+        faceReco.main( algo=algo_type )
+    
+    elif algo_type == "NNET":
+        n_epoch = args.n_epoch
+        n_hidden = args.n_hidden
+        batch = args.batch_size
+        lr = args.lr
+        wd = args.wd
+        faceReco = Main( batch_size=batch, n_epoch=n_epoch, n_hidden=n_hidden, lr=lr, wd=wd, 
+                         trainFile=trainFile, testFile=testFile, debug_mode=debug_mode )
+        faceReco.main( algo=algo_type )
 
