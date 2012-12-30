@@ -20,7 +20,8 @@ class Gui:
         self.algoType = "kppv" # Par défaut
         
         # voisinage pour kppv
-        self.K = 1    
+        self.K = 1  
+        self.Theta = 0.5  
         
         # paremetres nnet (par default)
         self.batch_size = 1
@@ -99,7 +100,8 @@ class Gui:
         main_box.pack_start(frame_1, True, True, 10)
 
         # Box nnet
-        self.box_nnet = gtk.HBox(True, 0)
+        self.box_nnet = gtk.VBox(True, 0)
+        box_h1 = gtk.HBox(True, 0)
         lab_1 = gtk.Label("Nombre d'époques :")
         lab_1.set_justify(gtk.JUSTIFY_LEFT)
         lab_1.show()
@@ -110,8 +112,8 @@ class Gui:
         box_incr.set_snap_to_ticks(True)
         box_incr.connect("value-changed", self.updateParam, "Epoch_value")
         box_incr.show()
-        self.box_nnet.pack_start(lab_1, True, True, 5)
-        self.box_nnet.pack_start(box_incr, True, True, 5)
+        box_h1.pack_start(lab_1, True, True, 5)
+        box_h1.pack_start(box_incr, True, True, 5)
         
         lab_1 = gtk.Label("Nombre de neurones :")
         lab_1.set_justify(gtk.JUSTIFY_LEFT)
@@ -123,12 +125,60 @@ class Gui:
         box_incr.set_snap_to_ticks(True)
         box_incr.connect("value-changed", self.updateParam, "Hid_value")
         box_incr.show()
-        self.box_nnet.pack_start(lab_1, True, True, 5)
-        self.box_nnet.pack_start(box_incr, True, True, 5)
+        box_h1.pack_start(lab_1, True, True, 5)
+        box_h1.pack_start(box_incr, True, True, 5)
         
+        lab_1 = gtk.Label("Taille du batch :")
+        lab_1.set_justify(gtk.JUSTIFY_LEFT)
+        lab_1.show()
+        ajt_k = gtk.Adjustment(self.batch_size, 1.0, 100000., 1.0, 5.0, 0.0)
+        box_incr = gtk.SpinButton(ajt_k, 0, 0)
+        box_incr.set_numeric(True)
+        box_incr.set_wrap(False)
+        box_incr.set_snap_to_ticks(True)
+        box_incr.connect("value-changed", self.updateParam, "Batch_value")
+        box_incr.show()
+        box_h1.pack_start(lab_1, True, True, 5)
+        box_h1.pack_start(box_incr, True, True, 5)
+        box_h1.show()
+
+        self.box_nnet.pack_start(box_h1, True, True, 5)
+        
+        box_h1 = gtk.HBox(True, 0)
+        lab_1 = gtk.Label("Taux d'apprentissage :")
+        lab_1.set_justify(gtk.JUSTIFY_LEFT)
+        lab_1.show()
+        ajt_k = gtk.Adjustment(self.lr, 0.0, 1.0, 0.001, 0.01, 0.0)
+        box_incr = gtk.SpinButton(ajt_k, 0, 0)
+        box_incr.set_digits(5)
+        box_incr.set_numeric(True)
+        box_incr.set_wrap(False)
+        box_incr.set_snap_to_ticks(True)
+        box_incr.connect("value-changed", self.updateParam, "Lr_value")
+        box_incr.show()
+        box_h1.pack_start(lab_1, True, True, 5)
+        box_h1.pack_start(box_incr, True, True, 5)
+        
+        lab_1 = gtk.Label("Pénalité L2 :")
+        lab_1.set_justify(gtk.JUSTIFY_LEFT)
+        lab_1.show()
+        ajt_k = gtk.Adjustment(self.wd, 0.0, 1.0, 0.001, 0.01, 0.0)
+        box_incr = gtk.SpinButton(ajt_k, 0, 0)
+        box_incr.set_digits(5)
+        box_incr.set_numeric(True)
+        box_incr.set_wrap(False)
+        box_incr.set_snap_to_ticks(True)
+        box_incr.connect("value-changed", self.updateParam, "Wd_value")
+        box_incr.show()
+        box_h1.pack_start(lab_1, True, True, 5)
+        box_h1.pack_start(box_incr, True, True, 5)
+        box_h1.show()
+        
+        self.box_nnet.pack_start(box_h1, True, True, 5)
         box_param.pack_start(self.box_nnet, True, True, 5)
         
         # Box kppv
+        self.box_kppv = gtk.HBox(True, 0)
         lab_1 = gtk.Label("Nombre de voisins a consulter :")
         lab_1.set_justify(gtk.JUSTIFY_LEFT)
         lab_1.show()
@@ -141,7 +191,22 @@ class Gui:
         box_incr.connect("value-changed", self.updateParam, "K_value")
         box_incr.show()
         
-        self.box_kppv = gtk.HBox(True, 0)
+        self.box_kppv.pack_start(lab_1, True, True, 5)
+        self.box_kppv.pack_start(box_incr, True, True, 5)
+        
+        lab_1 = gtk.Label("Ecart type (Parzen) :")
+        lab_1.set_justify(gtk.JUSTIFY_LEFT)
+        lab_1.show()
+        
+        ajt_k = gtk.Adjustment(self.Theta, 0.0, 1.0, 0.01, 0.10, 0.0)
+        box_incr = gtk.SpinButton(ajt_k, 0, 0)
+        box_incr.set_digits(3)
+        box_incr.set_numeric(True)
+        box_incr.set_wrap(False)
+        box_incr.set_snap_to_ticks(True)
+        box_incr.connect("value-changed", self.updateParam, "Theta_value")
+        box_incr.show()
+        
         self.box_kppv.pack_start(lab_1, True, True, 5)
         self.box_kppv.pack_start(box_incr, True, True, 5)
         
@@ -198,7 +263,7 @@ class Gui:
                     
             log.info("> Run K-PPV with" + str(self.K) + "neigbours...\n")
             
-            faceReco = MainConsole.Main( K=self.K, debug_mode=self.debug_mode )
+            faceReco = MainConsole.Main( K=self.K, Theta=self.Theta, debug_mode=self.debug_mode )
             # On thread l'app pour le ne pas figer le gui
             t = Thread(target=faceReco.main, args=("KNN", self.textview))
             t.start()# On demarre le thread
@@ -211,7 +276,8 @@ class Gui:
         
             log.info("> Run NNET with \n")
             
-            faceReco = MainConsole.Main( n_epoch=self.n_epoch, debug_mode=self.debug_mode )
+            faceReco = MainConsole.Main( n_epoch=self.n_epoch, n_hidden=self.n_hidden, batch_size=self.batch_size,
+                                         lr=self.lr, wd=self.wd, debug_mode=self.debug_mode )
             # On thread l'app pour le ne pas figer le gui
             t = Thread(target=faceReco.main, args=("NNET", self.textview))
             t.start()# On demarre le thread
@@ -233,12 +299,23 @@ class Gui:
             self.box_nnet.show()
     
     def updateParam(self, widget, data):
+        # KNN
         if data == "K_value":
             self.K = widget.get_value_as_int()
+        elif data == "Theta_value":
+            self.Theta = widget.get_value()
+        
+        # NNET
         elif data == "Epoch_value":
             self.n_epoch = widget.get_value_as_int()
         elif data == "Hid_value":
             self.n_hidden = widget.get_value_as_int()
+        elif data == "Bath_value":
+            self.batch_size = widget.get_value_as_int()
+        elif data == "Lr_value":
+            self.lr = widget.get_value()
+        elif data == "Wd_value":
+            self.wd = widget.get_value()
         
 
 # Si le script est directement executé (pas importé) on lance l'interface graphique
