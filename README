@@ -1,0 +1,21 @@
+tools.picturesDictionaryConstruction() créé lfwNames.txt et orlNames.txt
+Ces fichiers contiennent les chemins vers toutes les photos correspondantes, avec en premiere ligne le format (au cas où...) en deuxieme ligne le nombre d'images, puis un chemin par ligne à partir de la troisieme ligne.
+Classés
+
+tools.trainAndTestConstruction(nbTrain) va construire les fichiers train.txt et test.txt
+nbTrain correspond au nombre d'exemples par classe que l'on veut pour l'entrainement.
+Les fichiers sont écrits comme suit:
+nbClassesLFW nbExemplesLFW
+nbClassesORL nbExemplesORL
+cheminLFW
+cheminLFW
+...
+cheminORL
+cheminORL
+...
+
+respectivement pour le train et le test.
+
+Si nbTrain==0 ça marche comme tools.picturesDictionaryConstruction() (mais ce cas on peut l'oublier), si nbTrain==200000000 ça marche niquel
+
+tools.trainAndTestConstruction(nbTrain) fonctionne à l'aide de lfw-names_current établit par rm_useless_datas. avantd'exécuter tools.trainAndTestConstruction(nbTrain) il faut donc faire ./rm_useless_datas nbTrain pour être surs de ne conserver que les dossiers où l'on aura au moins 1 exemple de test.

@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import numpy as np
 import sys
+import os
 
 """
 	Importe les images liste "filename" et les convertient en vecteurs
@@ -27,6 +28,151 @@ def loadImageData( filename ):
 		data.append( list(img.getdata()) )
 
 	return np.transpose( data ), imageList[:, 0].astype(int)
+
+"""
+        Modifie les couleurs de l'image en nuances de gris
+"""
+def changeToGrey( filename ):
+
+	import Image
+	from pygame import image
+	import PIL
+
+	# Lecture du fichier
+	imageList = []
+	f = open(filename, 'r')
+
+	for line in f:
+		e = line.split() # On split selon les espaces
+		imageList.append([e[0], e[1]])
+
+	f.close()
+	imageList = np.array( imageList )
+
+	for im in imageList[:,1]:
+
+	# Recuperation resolution
+		image=image.load("Databases/LFW/lfw/"+ str( im ))
+		resolution=(image.get_width(),image.get_height())
+	
+	# Modification pixels
+		img = Image.open("Databases/LFW/lfw/"+ str( im ))
+		pix=im.load()
+		for i in range(resolution[0]):
+			for j in range(resolution[1]):
+				gris=int(round(0.299*pix[i,j][0]+0.587*pix[i,j][1]+0.114*pix[i,j][2]))
+				pix[i,j]=(gris,gris,gris)
+		img.save("Databases/LFW/lfw/"+ str( im ))
+		img.close()
+
+"""
+        Recupere la liste des images de type precise ('lfw' ou 'orl')
+"""
+def listPictures(indiceSeparation,liste,type="Databases/LFW/lfw"):
+		import os, mimetypes
+		classesTrain=0
+		classesTest=0
+		exemplesTrain=0
+		exemplesTest=0
+		with_extension = 1
+ 
+		path = os.path.join( os.getcwd(), type)
+		finalTrain= []
+		finalTest= []
+
+		for root, dirs, files in os.walk(path):
+			# get length of path
+			if( root is path ) :
+				count = len(root)
+ 
+			if(files):
+				compteur=0
+				ajoutTrain=1
+				ajoutTest=1
+				for f in files:
+					if int(with_extension) == 0:
+						f = f.split('.')[0]
+					if f!="README" and indiceSeparation==0:
+						print("COUCOU")
+						finalTrain.append(type+root[count:]+"/"+f)	
+					elif f!="README" and compteur<indiceSeparation and (root[count+1:] in liste or len(liste)==0):
+						if ajoutTrain==1:
+							classesTrain+=1
+						exemplesTrain+=1
+						finalTrain.append(type+root[count:]+"/"+f)	
+						ajoutTrain=0
+						compteur+=1
+					elif f!="README" and compteur>=indiceSeparation and (root[count+1:] in liste or len(liste)==0):
+						print("CACA")
+						if ajoutTest==1:
+							classesTest+=1
+						exemplesTest+=1
+						finalTest.append(type+root[count:]+"/"+f)
+						ajoutTest=0
+						compteur+=1
+					
+             
+		return (finalTrain,finalTest,classesTrain,classesTest,exemplesTrain,exemplesTest)  
+
+"""
+        Sauvegarde les noms des images dans lfwNames.txt et orlNames.txt
+"""
+def picturesDictionaryConstruction():
+	liste=listPictures(0,[])[0]
+	liste.sort()
+	fichier=file('./lfwNames.txt','w')
+	fichier.write("jpg\n")
+	fichier.write(str(len(liste))+'\n')
+	for i in range(len(liste)):
+		fichier.write(liste[i]+'\n')
+	fichier.close()
+	liste=listPictures(0,[],"Databases/orl_faces")[0]
+	liste.sort()
+	fichier=file('./orlNames.txt','w')
+	fichier.write("pgm\n")
+	fichier.write(str(len(liste))+'\n')
+	for i in range(len(liste)):
+		fichier.write(liste[i]+'\n')
+	fichier.close()
+
+"""
+        Construit les fichiers train.txt et test.txt contenant les noms des images utilisées
+"""
+def trainAndTestConstruction(nbTrain):
+	fichier=open("Databases/LFW/lfw-names_current.txt",'r')
+	lignes=fichier.read().split('\n')
+	lignes=lignes[:-1]  #On supprime le dernier element ''
+	fichierTrain=file('train.txt','w')
+	fichierTest=file('test.txt','w')
+	nom=[]
+	nbMax=[]
+	for i in range(len(lignes)):
+		(mot,nb)=(lignes[i].split('\t')[0],int(lignes[i].split('\t')[1]))
+		nbMax.append(nb)
+		nom.append(mot)
+	(listeTrain,listeTest,classesTrainLFW,classesTestLFW,exemplesTrainLFW,exemplesTestLFW)=listPictures(nbTrain,nom)
+	(listeTrainORL,listeTestORL,classesTrainORL,classesTestORL,exemplesTrainORL,exemplesTestORL)=listPictures(nbTrain,[],"Databases/orl_faces")
+	listeTrain.sort()
+	listeTest.sort()
+	listeTrainORL.sort()
+	listeTestORL.sort()
+	fichierTrain.write(str(classesTrainLFW)+' '+str(exemplesTrainLFW)+'\n'+str(classesTrainORL)+' '+str(exemplesTrainORL)+'\n')
+	fichierTest.write(str(classesTestLFW)+' '+str(exemplesTestLFW)+'\n'+str(classesTestORL)+' '+str(exemplesTestORL)+'\n')
+	for i in range(len(nom)):
+		fichierTrain.write(nom[i]+' '+str(np.min((nbTrain,nbMax[i])))+'\n')
+		nbTest=nbMax[i]-nbTrain
+		if nbTest>0:
+			fichierTest.write(nom[i]+' '+str(nbTest)+'\n')
+	for i in range(len(listeTrain)):
+		fichierTrain.write(listeTrain[i]+'\n')
+	for i in range(len(listeTest)):
+		fichierTest.write(listeTest[i]+'\n')	
+	for i in range(len(listeTrainORL)):
+		fichierTrain.write(listeTrainORL[i]+'\n')
+	for i in range(len(listeTestORL)):
+		fichierTest.write(listeTestORL[i]+'\n')
+	fichierTrain.close()
+	fichierTest.close()		
 
 """
 	Sauvegarde les donné d'entrainement dans le fichier "train.xml"
