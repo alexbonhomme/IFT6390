@@ -32,38 +32,36 @@ def loadImageData( filename ):
 """
         Modifie les couleurs de l'image en nuances de gris
 """
-def changeToGrey( filename ):
+def changeToGreyTot():
+
+	fichier=open("lfwNames.txt")
+	listeFiles=fichier.read().split('\n')
+	listeFiles=listeFiles[2:-1]
+	
+	for i in range(len(listeFiles)):
+		changeToGrey(listeFiles[i])
+		print(i)
+		
+"""
+
+"""
+def changeToGrey(filename):
 
 	import Image
 	from pygame import image
 	import PIL
-
-	# Lecture du fichier
-	imageList = []
-	f = open(filename, 'r')
-
-	for line in f:
-		e = line.split() # On split selon les espaces
-		imageList.append([e[0], e[1]])
-
-	f.close()
-	imageList = np.array( imageList )
-
-	for im in imageList[:,1]:
-
 	# Recuperation resolution
-		image=image.load("Databases/LFW/lfw/"+ str( im ))
-		resolution=(image.get_width(),image.get_height())
+	image=image.load(filename)
+	resolution=(image.get_width(),image.get_height())
 	
 	# Modification pixels
-		img = Image.open("Databases/LFW/lfw/"+ str( im ))
-		pix=im.load()
-		for i in range(resolution[0]):
-			for j in range(resolution[1]):
-				gris=int(round(0.299*pix[i,j][0]+0.587*pix[i,j][1]+0.114*pix[i,j][2]))
-				pix[i,j]=(gris,gris,gris)
-		img.save("Databases/LFW/lfw/"+ str( im ))
-		img.close()
+	img = Image.open(filename)
+	pix=img.load()
+	for i in range(resolution[0]):
+		for j in range(resolution[1]):
+			gris=int(round(0.299*pix[i,j][0]+0.587*pix[i,j][1]+0.114*pix[i,j][2]))
+			pix[i,j]=(gris,gris,gris)
+	img.save(filename)
 
 """
         Recupere la liste des images de type precise ('lfw' ou 'orl')
