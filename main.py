@@ -36,13 +36,13 @@ class Main (object):
         
         # fichiers de train
         if trainFile == "":
-            self.trainFile = "./Databases/train1.txt"
+            self.trainFile = "./Databases/train.txt"
         else:
             self.trainFile = trainFile
         
         # ... de test
         if testFile == "":
-            self.testFile = "./Databases/test4.txt"
+            self.testFile = "./Databases/test.txt"
         else:
             self.testFile = testFile
         
@@ -168,7 +168,7 @@ class Main (object):
 
 #### FIN CLASSE MAIN ####################################
 
-# Si le script est appelé directement on execute se code
+# Si le script est appelé directement on execute ce code
 if __name__ == "__main__":
     import argparse
 
