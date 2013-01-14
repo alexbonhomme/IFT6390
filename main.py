@@ -20,7 +20,7 @@ class Main (object):
 
     def __init__(self, K=1, Theta=0.5, 
                  batch_size=1, n_epoch=100, n_hidden=10, lr=0.001, wd=0.,
-                 trainFile="", testFile="", debug_mode=True):
+                 trainFile="", testFile="", debug_mode=True, categorie="ORL", nbExemples=5):
         # KNN
         self.K = K
         
@@ -34,18 +34,14 @@ class Main (object):
         self.lr = lr
         self.wd = wd
         
-        # fichiers de train
-        if trainFile == "":
-            self.trainFile = "./Databases/train.txt"
-        else:
-            self.trainFile = trainFile
-        
-        # ... de test
-        if testFile == "":
-            self.testFile = "./Databases/test.txt"
-        else:
-            self.testFile = testFile
-        
+        # categorie  ("LFW", "ORL", "BOTH")
+        self.categorie=categorie
+        self.nbExemples=nbExemples
+        if self.nbExemples>=10 and self.categorie=="BOTH":
+            self.categorie="LFW"
+        if self.nbExemples>=10 and self.categorie=="ORL":
+            log.error("Le nombre d'entrees de l'ensemble d'entrainement doit etre constitue de moins de 10 exemples par classes pour le domaine ORL")
+
         # logger pour debbug
         if debug_mode:
             log.basicConfig(stream=sys.stderr, level=log.DEBUG)
@@ -63,10 +59,14 @@ class Main (object):
                 textview.scroll_mark_onscreen(buf.get_insert())
             else:
                 log.info(text)
-    
+        
+        # creation des trainFile et testFile
+        tools.constructLfwNamesCurrent(self.nbExemples)
+        tools.trainAndTestConstruction(self.nbExemples)
+
         # Chargement des données
-        dataTrain, dataTrainIndices = tools.loadImageData( self.trainFile )
-    
+        dataTrain, dataTrainIndices = tools.loadImageData( "train", self.categorie)
+        
         # tranformation pca
         pca_model = PCA( dataTrain )
         pca_model.transform() # on transforme les donné dans un le "eigen space"
@@ -87,7 +87,7 @@ class Main (object):
             ## TEST ###########################
             #TODO Toute cette partie est a revoir pour sortir des graphes
             # de train, validation, test
-            dataTest, dataTestIndices = tools.loadImageData( self.testFile )
+            dataTest, dataTestIndices = tools.loadImageData( "test", self.categorie )
 
             # compteurs de bons résultats   
             nbGoodResult = 0
@@ -190,6 +190,17 @@ if __name__ == "__main__":
                       help="test FILE", 
                       default="./Databases/test4.txt",
                       metavar="FILE")
+
+    parser.add_argument("--nExamples", 
+                      dest="nbExemples",
+                      help="Number of exemples per Classe for training",
+                      type=int,  
+                      default=7)
+
+    parser.add_argument("--categorie", 
+                      dest="categorie",
+                      help="LFW, ORL or BOTH", 
+                      default="ORL")
     
     # sous parseur pour knn et nnet
     subparsers = parser.add_subparsers(title='Algorythms',
@@ -258,12 +269,14 @@ if __name__ == "__main__":
     testFile = args.test_filename
     debug_mode = args.verbose
     algo_type = args.algo_type.upper()
+    categorie = args.categorie
+    nbExemples = args.nbExemples
 
     #### Début du programme
     if algo_type == "KNN":
         K = args.k
         Theta = args.theta
-        faceReco = Main( K=K, Theta=Theta, trainFile=trainFile, testFile=testFile, debug_mode=debug_mode )
+        faceReco = Main( K=K, Theta=Theta, trainFile=trainFile, testFile=testFile, categorie=categorie, nbExemples=nbExemples, debug_mode=debug_mode)
         faceReco.main( algo=algo_type )
     
     elif algo_type == "NNET":
@@ -273,6 +286,6 @@ if __name__ == "__main__":
         lr = args.lr
         wd = args.wd
         faceReco = Main( batch_size=batch, n_epoch=n_epoch, n_hidden=n_hidden, lr=lr, wd=wd, 
-                         trainFile=trainFile, testFile=testFile, debug_mode=debug_mode )
+                         trainFile=trainFile, testFile=testFile, debug_mode=debug_mode, categorie=categorie, nbExemples=nbExemples)
         faceReco.main( algo=algo_type )
 

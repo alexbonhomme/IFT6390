@@ -3,6 +3,5 @@ test_xml.py
 train.xml
 train.py
 face.py
-
 Databases/orl_faces/
 Databases/LFW/lfw/
