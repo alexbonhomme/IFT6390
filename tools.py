@@ -15,7 +15,7 @@ def loadImageData( trainTest="train", categorie="ORL"):
 	if categorie=="LFW":
 		imageList = np.array( listeLFW )
 	elif categorie=="ORL":
-		imageList = np.array( listeLFW )
+		imageList = np.array( listeORL )
 	elif categorie=="BOTH":
 		imageListLFW = np.array( listeLFW )
 		imageListORL = np.array( listeORL )
