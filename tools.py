@@ -6,25 +6,26 @@ import os
 """
 	Importe les images liste "filename" et les convertient en vecteurs
 """
-def loadImageData( filename ):
+def loadImageData( trainTest="train", categorie="ORL"):
 
 	import Image as im
 
+	(listeLFW,listeORL)=cheminsToLoad(trainTest)
 	# Lecture du fichier
-	imageList = []
-	f = open(filename, 'r')
-
-	for line in f:
-		e = line.split() # On split selon les espaces
-		imageList.append([e[0], e[1]])
-
-	f.close()
-	imageList = np.array( imageList )
-
+	if categorie=="LFW":
+		imageList = np.array( listeLFW )
+	elif categorie=="ORL":
+		imageList = np.array( listeLFW )
+	elif categorie=="BOTH":
+		imageListLFW = np.array( listeLFW )
+		imageListORL = np.array( listeORL )
+		nbClassesLFW=imageListeLFW[-1][0]
+		for i in range(len(imageListeORL)):
+			imageListORL[i][0]=imageListORL[i][0]+nbClassesLFW
 	# Recuperation des valeurs depuis les images
 	data = []
 	for image in imageList[:,1]:
-		img = im.open("Databases/orl_faces/"+ str( image ))
+		img = im.open(filename)
 		data.append( list(img.getdata()) )
 
 	return np.transpose( data ), imageList[:, 0].astype(int)
@@ -67,7 +68,7 @@ def changeToGrey(filename):
         Recupere la liste des images de type precise ('lfw' ou 'orl')
 """
 def listPictures(indiceSeparation,liste,type="Databases/LFW/lfw"):
-		import os, mimetypes
+		import os, mimetypes, random
 		classesTrain=0
 		classesTest=0
 		exemplesTrain=0
@@ -87,11 +88,11 @@ def listPictures(indiceSeparation,liste,type="Databases/LFW/lfw"):
 				compteur=0
 				ajoutTrain=1
 				ajoutTest=1
+				random.shuffle(files)
 				for f in files:
 					if int(with_extension) == 0:
 						f = f.split('.')[0]
 					if f!="README" and indiceSeparation==0:
-						print("COUCOU")
 						finalTrain.append(type+root[count:]+"/"+f)	
 					elif f!="README" and compteur<indiceSeparation and (root[count+1:] in liste or len(liste)==0):
 						if ajoutTrain==1:
@@ -101,7 +102,6 @@ def listPictures(indiceSeparation,liste,type="Databases/LFW/lfw"):
 						ajoutTrain=0
 						compteur+=1
 					elif f!="README" and compteur>=indiceSeparation and (root[count+1:] in liste or len(liste)==0):
-						print("CACA")
 						if ajoutTest==1:
 							classesTest+=1
 						exemplesTest+=1
@@ -140,8 +140,8 @@ def trainAndTestConstruction(nbTrain):
 	fichier=open("Databases/LFW/lfw-names_current.txt",'r')
 	lignes=fichier.read().split('\n')
 	lignes=lignes[:-1]  #On supprime le dernier element ''
-	fichierTrain=file('train.txt','w')
-	fichierTest=file('test.txt','w')
+	fichierTrain=file('trainFile','w')
+	fichierTest=file('testFile','w')
 	nom=[]
 	nbMax=[]
 	for i in range(len(lignes)):
@@ -171,6 +171,32 @@ def trainAndTestConstruction(nbTrain):
 		fichierTest.write(listeTestORL[i]+'\n')
 	fichierTrain.close()
 	fichierTest.close()		
+
+"""
+	Recupere les chemins depuis trainFile et testFile. Utilisee par loadImageData()
+"""
+def cheminsToLoad(trainTest="train"):
+	fichier=open(trainTest+"File")
+	contenu=fichier.read().split('\n')[:-1]
+	fichier.close()
+	(nbClassesLFW,nbExemplesLFW)=(int(contenu[0].split(' ')[0]),int(contenu[0].split(' ')[1]))
+	(nbClassesORL,nbExemplesORL)=(int(contenu[1].split(' ')[0]),int(contenu[1].split(' ')[1]))
+	nbExemplesPClasseORL=nbExemplesORL/nbClassesORL
+	nbExemplesPClasseLFW=nbExemplesLFW/nbClassesLFW
+	(listeLFW,listeORL)=([],[])
+	listeCheminsLFW=contenu[2+nbClassesLFW:2+nbClassesLFW+nbExemplesLFW]
+	listeCheminsORL=contenu[2+nbExemplesLFW+nbClassesLFW:]
+	classe=1
+	for i in range(len(listeCheminsLFW)):
+		listeLFW.append([classe,listeCheminsLFW[i]])
+		if (i+1)%(nbExemplesPClasseLFW)==0:
+			classe+=1
+	classe=1
+	for i in range(len(listeCheminsORL)):
+		listeORL.append([classe,listeCheminsORL[i]])
+		if (i+1)%(nbExemplesPClasseORL)==0:
+			classe+=1
+	return (listeLFW,listeORL)
 
 """
 	Sauvegarde les donné d'entrainement dans le fichier "train.xml"
