@@ -283,3 +283,63 @@ def softmaxMat(X):
     
     return out
 
+######################################################################################
+#
+#   Affichage plusieurs courbes sur la même figure
+#
+#   x: liste des coordonnées en x
+#   y: liste des coordonnées en y
+#   cType: liste des représentations associées aux courbes
+#   legend: liste des légendes associées aux courbes
+#   xlim, ylim: bornes en x, y
+#   xlabel, ylabel: labels en x, y
+#   title: titre de la figure
+#   bGrid: active/desactive l'affichage de la grille
+#   bDisplay: active/desactive l'affichage des courbes
+#   filename: si renseigné, enregistre la figure dans un fichier nommé <filename.png>
+#
+######################################################################################
+def drawCurves(x, y, cType, legend="", xlim="", ylim="", xlabel="", ylabel="", title="", bGrid=True, bDisplay=True, filename=""):
+    if len(x) != len(y) != len(cType):
+        print "Attention: Les deux listes doivent avoir la même taille."
+        return -1
+        
+    for i in xrange(len(x)):
+        pylab.plot(x[i], y[i], cType[i])
+        pylab.annotate('Min: '+ str(round(np.min(y[i]),3)),
+                        xy=(np.argmin(y[i]), np.min(y[i])),
+                        #xytext=(np.argmin(y[i])-(y[i].shape[0]/1000.), np.min(y[i])+(y[i].shape[0]/1000.)),
+                        va='top',
+                        ha='center')
+                        #arrowprops=dict(arrowstyle='->'))
+	pylab.grid(bGrid)
+	
+	# titre / labels / legende
+	if title != "":
+	    pylab.title(title)
+	if xlabel != "":
+	    pylab.xlabel(xlabel)
+	if ylabel != "":
+	    pylab.ylabel(ylabel)
+	if legend != "":
+	    pylab.legend(legend)
+	
+	# bornes
+	if xlim != "":
+	    pylab.xlim(xlim)
+	if ylim != "":
+	    pylab.ylim(ylim)
+    
+    # sauvegarde de la courbe
+    if filename != "":
+	    filename += '.png'
+	    print 'On sauvegarde la figure dans', filename
+	    pylab.savefig(filename,format='png')
+
+    # affichage
+    if bDisplay:
+        pylab.show()
+
+    # close
+    pylab.clf()
+
