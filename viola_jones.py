@@ -1,30 +1,73 @@
 #! /usr/bin/env python2
 # -*- coding: utf-8 -*-
 import cv2.cv as cv
-#import cv2 as cv
+import numpy
+import os.path
+import glob
+import Image as im
 
-# Example d'utilisation d'opencv pour extraire le visage
-# Il ne reste plus qu'a faire une classe et a retourne une array avec numpy
-# NOTE: Visiblement avec la version 2 d'opencv numpy est "integré"
-# et donc opencv comprends les array etc...
+class Viola_Jones():
 
-# On charge le classifieur a utiliser (je n'ai mis que les classifieurs de visage dans ce dossier.
-# Mais il en existe d'autres pour les yeux etc.. si ca vous interesse)))
-hc = cv.Load("haarcascade/haarcascade_frontalface_default.xml") # fonctionne tres bien pour un seul visage
-#hc = cv.Load("haarcascade/haarcascade_frontalface_alt_tree.xml") # beaucoup mieux pour plusieurs visages
+	# number_faces définit le nombre de visages que l'on souhaite détecter dans l'image 1 ou plusieurs
+	def __init__(self):
+		
+		# modèle qui fonctionne bien pour un seul visage
+		self.hc = cv.Load("haarcascade/haarcascade_frontalface_default.xml")
 
-# on charge une image (en grayscale)
-img = cv.LoadImage("Databases/lena.jpg", 0)
-#img = cv.LoadImage("Databases/mariage.jpg", 0)
-   
-# detection des visage
-faces = cv.HaarDetectObjects(img, hc, cv.CreateMemStorage()) 
+		# initilisation du cadre des visages		
+		self.width_minimum = float("inf")
+		self.height_minimum = float("inf")
+	
+	#obtention des cadres de découpe pour une liste
+	def detection_size(self, name_img):
+		# on charge une image (en grayscale)
+		img = cv.LoadImage(name_img, 0)
+  
+		# detection des visage
+		faces = cv.HaarDetectObjects(img, self.hc, cv.CreateMemStorage())
+		
+		# on récupère la zone de visage la plus petite pour l'utiliser comme norme
+		i = 0
+		for ((x,y,w,h), n) in faces:			
+                    if(w < self.width_minimum) : self.width_minimum = w
+		    if(h < self.height_minimum) : self.height_minimum = h
 
-i = 0
-for ((x,y,w,h), n) in faces:
-    cv.SaveImage("faces_"+ str(i) +".pgm", cv.GetSubRect(img, (x, y, w, h))) # enregistrement des visages détecté, c'est cela qu'il faut modifier
-    cv.Rectangle(img, (x, y), (x+w, y+h), 255)
-    i += 1
 
-# Saugarde de l'image de base avec les zone detecté (pour visu)
-cv.SaveImage("faces_detected.pgm", img)
+	#découpage des photos avec les tailles obtenues
+	def get_faces(self, name_img):
+		# on charge une image (en grayscale)
+		img = cv.LoadImage(name_img, 0)
+  
+		# detection des visage
+		faces = cv.HaarDetectObjects(img, self.hc, cv.CreateMemStorage())
+
+		# on découpe l'image selon les visages et on en retourne des vecteurs images
+		data = []
+
+		for ((x,y,w,h), n) in faces:
+
+		    #on récupère l'image du visage
+		    face = cv.GetSubRect(img, (x, y, self.width_minimum, self.height_minimum))
+
+		    #on vectorise l'image du visage
+		    for j in range(0, face.height):
+        		for i in range(0, face.width):
+            	     		data.append(face[i, j])
+
+		return data 
+
+
+	#detection des visages sur une liste d'image se trouvant dans toute l'arborescence du dossier
+	def detections_faces_list(self, array_images):
+		data = []
+	
+		#détection des visages
+		
+		#dimension du cadre pour les visages
+		for img in array_images : self.detection_size(img)
+
+		#vectorisation des visages
+		for img in array_images : data.append(list(self.get_faces(img)))
+
+		return numpy.transpose(numpy.array(data))
+
