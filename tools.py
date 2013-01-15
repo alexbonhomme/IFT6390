@@ -10,8 +10,8 @@ def loadImageData( trainTest="train", categorie="ORL"):
 
 	import Image as im
 
+	# recupere chemins et indices de classes
 	(listeLFW,listeORL)=cheminsToLoad(trainTest)
-	# Lecture du fichier
 	if categorie=="LFW":
 		imageList = np.array( listeLFW )
 	elif categorie=="ORL":
@@ -25,8 +25,11 @@ def loadImageData( trainTest="train", categorie="ORL"):
 	# Recuperation des valeurs depuis les images
 	data = []
 	for image in imageList[:,1]:
-		img = im.open(filename)
+		img = im.open(image)
 		data.append( list(img.getdata()) )
+		print(len(data[-1]))
+		print(len(data))
+		print()
 
 	return np.transpose( data ), imageList[:, 0].astype(int)
 
@@ -113,6 +116,32 @@ def listPictures(indiceSeparation,liste,type="Databases/LFW/lfw"):
 		return (finalTrain,finalTest,classesTrain,classesTest,exemplesTrain,exemplesTest)  
 
 """
+        Recupere la liste des dossiers de type LFW contenant au moins nbMaxImages+1 images, ainsi que le nombre d'images présentes
+"""
+def constructLfwNamesCurrent(nbMaxImages):
+		import os, mimetypes, random
+
+		path = os.path.join( os.getcwd(),"Databases/LFW/lfw")
+		liste= []
+		dossier=""
+
+		for root, dirs, files in os.walk(path):
+			# get length of path
+			if( root is path ) :
+				count = len(root)
+			if(dirs):
+				dossier=dirs
+			if(files):
+				nbImages=0
+				if len(files)>nbMaxImages:
+					liste.append([root[count+1:],len(files)])
+		liste.sort()
+		fichier=file("Databases/LFW/lfw-names_current.txt",'w')
+		for i in range(len(liste)):
+			fichier.write(liste[i][0]+'\t'+str(liste[i][1])+'\n')
+             
+
+"""
         Sauvegarde les noms des images dans lfwNames.txt et orlNames.txt
 """
 def picturesDictionaryConstruction():
@@ -173,7 +202,7 @@ def trainAndTestConstruction(nbTrain):
 	fichierTest.close()		
 
 """
-	Recupere les chemins depuis trainFile et testFile. Utilisee par loadImageData()
+	Recupere les chemins depuis trainFile et testFile, ainsi que les classes. Utilisee par loadImageData()
 """
 def cheminsToLoad(trainTest="train"):
 	fichier=open(trainTest+"File")
