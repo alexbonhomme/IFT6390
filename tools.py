@@ -23,7 +23,6 @@ def loadImageData( trainTest="train", categorie="ORL"):
 	# Recuperation des valeurs depuis les images
 	vj_model = vj.Viola_Jones()
 	return vj_model.detections_faces_list(imageList[:,1]), imageList[:, 0].astype(int)
->>>>>>> 46220b04fd0a9aed62983ad88a0f0686b44b183b
 
 """
         Modifie les couleurs de l'image en nuances de gris
