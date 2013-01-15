@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import numpy as np
 import sys
+import logging as log
 import os
 
 """
@@ -12,6 +13,7 @@ def loadImageData( trainTest="train", categorie="ORL"):
 
 	# recupere chemins et indices de classes
 	(listeLFW,listeORL)=cheminsToLoad(trainTest)
+	print(listeLFW)
 	if categorie=="LFW":
 		imageList = np.array( listeLFW )
 	elif categorie=="ORL":
@@ -27,10 +29,8 @@ def loadImageData( trainTest="train", categorie="ORL"):
 	for image in imageList[:,1]:
 		img = im.open(image)
 		data.append( list(img.getdata()) )
-		print(len(data[-1]))
-		print(len(data))
-		print()
-
+		
+	
 	return np.transpose( data ), imageList[:, 0].astype(int)
 
 """
