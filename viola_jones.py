@@ -52,7 +52,7 @@ class Viola_Jones():
 		    #on vectorise l'image du visage
 		    for j in range(0, face.height):
         		for i in range(0, face.width):
-            	     		data.append(face[i, j])
+            	     		data.append(face[j, i])
 
 		return data 
 
