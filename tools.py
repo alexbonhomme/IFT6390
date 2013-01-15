@@ -2,6 +2,7 @@
 import numpy as np
 import sys
 import os
+import viola_jones as vj
 
 """
 	Importe les images liste "filename" et les convertient en vecteurs
@@ -16,22 +17,10 @@ def loadImageData( trainTest="train", categorie="ORL"):
 		imageList = np.array( listeLFW )
 	elif categorie=="ORL":
 		imageList = np.array( listeORL )
-	elif categorie=="BOTH":
-		imageListLFW = np.array( listeLFW )
-		imageListORL = np.array( listeORL )
-		nbClassesLFW=imageListeLFW[-1][0]
-		for i in range(len(imageListeORL)):
-			imageListORL[i][0]=imageListORL[i][0]+nbClassesLFW
-	# Recuperation des valeurs depuis les images
-	data = []
-	for image in imageList[:,1]:
-		img = im.open(image)
-		data.append( list(img.getdata()) )
-		print(len(data[-1]))
-		print(len(data))
-		print()
 
-	return np.transpose( data ), imageList[:, 0].astype(int)
+	# Recuperation des valeurs depuis les images
+	vj_model = vj.Viola_Jones()
+	return vj_model.detections_faces_list(imageList[:,1]), imageList[:, 0].astype(int)
 
 """
         Modifie les couleurs de l'image en nuances de gris
