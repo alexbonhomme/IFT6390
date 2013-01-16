@@ -374,3 +374,24 @@ def drawCurves(x, y, cType, legend="", xlim="", ylim="", xlabel="", ylabel="", t
     # close
     pylab.clf()
 
+
+"""
+        Complete la liste de valeurs avec un pas de 1, de sorte à ce que toutes les valeurs soient >1
+"""
+def completion(liste, nbElements):
+
+	liste.sort()
+	compteur = len(liste)
+	valeur = liste[0] - 1
+	while valeur > 0 and compteur <= nbElements :
+		liste.append(valeur)
+		compteur += 1
+		valeur -= 1
+	liste.sort()
+	valeur = liste[-1] + 1
+	while compteur <= nbElements :
+		liste.append(valeur)
+		compteur += 1
+		valeur += 1
+		
+
