@@ -13,14 +13,26 @@ def loadImageData( trainTest="train", categorie="ORL"):
 
 	# recupere chemins et indices de classes
 	(listeLFW,listeORL)=cheminsToLoad(trainTest)
+
 	if categorie=="LFW":
+
 		imageList = np.array( listeLFW )
+
+		# Recuperation des valeurs depuis les images avec un recentrage sur les visages
+		vj_model = vj.Viola_Jones()
+		return vj_model.detections_faces_list(imageList[:,1]), imageList[:, 0].astype(int)
+
 	elif categorie=="ORL":
+
 		imageList = np.array( listeORL )
 
-	# Recuperation des valeurs depuis les images
-	vj_model = vj.Viola_Jones()
-	return vj_model.detections_faces_list(imageList[:,1]), imageList[:, 0].astype(int)
+		# Recuperation des valeurs depuis les images sans aucune transformation
+		data = []
+		for image in imageList[:,1]:
+			img = im.open(image)
+			data.append( list(img.getdata()) )
+	
+		return np.transpose( data ), imageList[:, 0].astype(int)
 
 """
         Modifie les couleurs de l'image en nuances de gris
