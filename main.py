@@ -41,6 +41,8 @@ class Main (object):
             log.error("La  categorie d'images étudiées doit être LFW ou ORL")
         if self.nbExemples<0:
              log.error("Le nombre d'exemples envisagés doit être positif")
+        if self.nbExemples>=400 and self.categorie=="LFW":
+            log.error("Le nombre d'entrees de l'ensemble d'entrainement doit etre constitue de moins de 400 exemples par classes pour le domaine LFW")
         if self.nbExemples>=10 and self.categorie=="ORL":
             log.error("Le nombre d'entrees de l'ensemble d'entrainement doit etre constitue de moins de 10 exemples par classes pour le domaine ORL")
 
@@ -75,7 +77,7 @@ class Main (object):
 
         # creation des trainFile et testFile
         log.debug("Construction des fichiers d'entrainement")
-        tools.constructLfwNamesCurrent( self.nbExemples )
+        tools.constructLfwNamesCurrent( self.nbExemples + 2 )   # +2 car on envisage un minimum de 2 exemples test
         ( nbClassesLFW, nbClassesORL ) = tools.trainAndTestConstruction( self.nbExemples )
 
         # Chargement des données
@@ -195,6 +197,7 @@ class Main (object):
                             fichier = open("curvAccuracy"+self.categorie,"a")
                             fichier.write(str(self.nbExemples)+" "+str(res)+"\n")
                             fichier.close()
+        return listeRes
 
 #### FIN CLASSE MAIN ####################################
 
@@ -324,15 +327,19 @@ if __name__ == "__main__":
         yVector = []
         if curv == 1 :
             if categorie == "ORL" :
-                tools.completion( xVector, 8)
+                xVector = [1,2,3]
+                #tools.completion( xVector, 8)
             elif categorie == "LFW" :
                 xVector = [ nbExemples ]
                 tools.completion( xVector, 10)
         faceReco = Main( K=K, Theta=Theta, trainFile=trainFile, testFile=testFile, categorie=categorie, stock=stock, curv=curv, nbExemples=nbExemples, debug_mode=debug_mode)
         for n in xVector:
             faceReco.nbExemples = n
-            listeRes=faceReco.main( algo=algo_type )
-            yVector.append( listeRes )
+            listeRes = faceReco.main( algo=algo_type )
+            yVector.append( listeRes[0] )
+        print(xVector)
+        print(yVector)
+        tools.drawCurves( xVector, yVector, "r+", xlabel="Nbre ex. train par classe", ylabel="Precision")
         
     
     elif algo_type == "NNET":

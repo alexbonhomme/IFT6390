@@ -5,6 +5,7 @@ import logging as log
 import os
 import viola_jones as vj
 import logging as log
+import pylab
 
 """
 	Importe les images liste "filename" et les convertient en vecteurs
@@ -82,8 +83,15 @@ def listPictures(indiceSeparation, liste, type="Databases/LFW/lfw"):
 		with_extension = 1
  
 		path = os.path.join( os.getcwd(), type)
-		finalTrain= []
-		finalTest= []
+		finalTrain = []
+		finalTest = []
+		
+		if type == "Databases/LFW/lfw" :
+			borneMinTest = 2
+			borneMaxTest = 50
+		elif type ==  "Databases/orl_faces" : 
+			borneMinTest = 1
+			borneMaxTest = 9
 
 		for root, dirs, files in os.walk(path):
 			# get length of path
@@ -95,25 +103,29 @@ def listPictures(indiceSeparation, liste, type="Databases/LFW/lfw"):
 				ajoutTrain = 1
 				ajoutTest = 1
 				random.shuffle(files)
-				for f in files:
-					if int(with_extension) == 0:
-						f = f.split('.')[0]
-					if f != "README" and indiceSeparation == 0:
-						finalTrain.append(type+root[count:]+"/"+f)	
-					elif f != "README" and compteur < indiceSeparation and (root[count+1:] in liste or len(liste) == 0):
-						if ajoutTrain == 1:
-							classesTrain += 1
-						exemplesTrain += 1
-						finalTrain.append(type+root[count:]+"/"+f)	
-						ajoutTrain = 0
-						compteur += 1
-					elif f != "README" and compteur >= indiceSeparation and (root[count+1:] in liste or len(liste) == 0):
-						if ajoutTest == 1:
-							classesTest += 1
-						exemplesTest += 1
-						finalTest.append(type+root[count:]+"/"+f)
-						ajoutTest = 0
-						compteur += 1
+				if len(files) >= ( indiceSeparation + borneMinTest ):
+					print(len(files))
+					print(root[count:])
+					for f in files:
+						if int(with_extension) == 0:
+							f = f.split('.')[0]
+						if f != "README" and indiceSeparation == 0:
+							finalTrain.append(type+root[count:]+"/"+f)	
+						elif f != "README" and compteur < indiceSeparation and (root[count+1:] in liste or len(liste) == 0):
+							if ajoutTrain == 1:
+								classesTrain += 1
+							exemplesTrain += 1
+							finalTrain.append(type+root[count:]+"/"+f)	
+							ajoutTrain = 0
+							compteur += 1
+						elif f != "README" and compteur >= indiceSeparation and (root[count+1:] in liste or len(liste) == 0):
+							if compteur < (indiceSeparation + borneMaxTest) :
+								if ajoutTest == 1:
+									classesTest += 1
+								exemplesTest += 1
+								finalTest.append(type+root[count:]+"/"+f)
+								ajoutTest = 0
+								compteur += 1
 					
              
 		return (finalTrain, finalTest, classesTrain, classesTest, exemplesTrain, exemplesTest)  
@@ -187,13 +199,13 @@ def trainAndTestConstruction(nbTrain):
 	
 	(listeTrainORL, listeTestORL,
 	 classesTrainORL, classesTestORL,
-	 exemplesTrainORL, exemplesTestORL) = listPictures(nbTrain,[], "Databases/orl_faces")
+	 exemplesTrainORL, exemplesTestORL) = listPictures(np.min((nbTrain,9)),[], "Databases/orl_faces")
 	
 	listeTrain.sort()
 	listeTest.sort()
 	listeTrainORL.sort()
 	listeTestORL.sort()
-	
+
 	fichierTrain.write(str(classesTrainLFW)+' '+str(exemplesTrainLFW)+'\n'+str(classesTrainORL)+' '+str(exemplesTrainORL)+'\n')
 	fichierTest.write(str(classesTestLFW)+' '+str(exemplesTestLFW)+'\n'+str(classesTestORL)+' '+str(exemplesTestORL)+'\n')
 	
@@ -229,9 +241,6 @@ def cheminsToLoad(trainTest="train"):
 	(nbClassesLFW, nbExemplesLFW) = (int(contenu[0].split(' ')[0]), int(contenu[0].split(' ')[1]))
 	(nbClassesORL, nbExemplesORL) = (int(contenu[1].split(' ')[0]), int(contenu[1].split(' ')[1]))
 	
-	#TODO
-	if nbClassesORL == 0:
-		nbClassesORL = 1
 	
 	nbExemplesPClasseORL = nbExemplesORL/nbClassesORL
 	nbExemplesPClasseLFW = nbExemplesLFW/nbClassesLFW
@@ -328,30 +337,26 @@ def drawCurves(x, y, cType, legend="", xlim="", ylim="", xlabel="", ylabel="", t
         print "Attention: Les deux listes doivent avoir la même taille."
         return -1
         
-    for i in xrange(len(x)):
-        pylab.plot(x[i], y[i], cType[i])
-        pylab.annotate('Min: '+ str(round(np.min(y[i]),3)),
-                        xy=(np.argmin(y[i]), np.min(y[i])),
-                        #xytext=(np.argmin(y[i])-(y[i].shape[0]/1000.), np.min(y[i])+(y[i].shape[0]/1000.)),
-                        va='top',
-                        ha='center')
+    pylab.plot(x, y, cType)
+        #pylab.annotate('Min: '+ str(np.min(y[i])),
+                       # xy=(np.argmin(y[i]), np.min(y[i])))
                         #arrowprops=dict(arrowstyle='->'))
-	pylab.grid(bGrid)
+    pylab.grid(bGrid)
 	
 	# titre / labels / legende
-	if title != "":
+    if title != "":
 	    pylab.title(title)
-	if xlabel != "":
+    if xlabel != "":
 	    pylab.xlabel(xlabel)
-	if ylabel != "":
+    if ylabel != "":
 	    pylab.ylabel(ylabel)
-	if legend != "":
+    if legend != "":
 	    pylab.legend(legend)
 	
 	# bornes
-	if xlim != "":
+    if xlim != "":
 	    pylab.xlim(xlim)
-	if ylim != "":
+    if ylim != "":
 	    pylab.ylim(ylim)
     
     # sauvegarde de la courbe
