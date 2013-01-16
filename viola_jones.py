@@ -66,7 +66,6 @@ class Viola_Jones (object):
 					compute_nb_class.append( self.targets[i_img] )
 		
 				# on découpe l'image selon les visages et on en retourne des vecteurs images
-				zzz = 0
 				for ((x, y, w, h), n) in self.faces[i_img]:
 					im = cv.LoadImage(array_images[i_img], 0)
 				
@@ -105,9 +104,6 @@ class Viola_Jones (object):
 						vect = np.asarray(face_resize).reshape(self.w_resize*self.h_resize,)
 					else:
 						vect = np.asarray(face).reshape(self.w_resize*self.h_resize,)
-
-					cv.SaveImage("test/"+ str(i_img) + str(zzz) + ".jpg", cv.fromarray(vect.reshape(self.h_resize,self.w_resize)))
-					zzz +=1
 					
 					faces_list.append(vect)
 					targets_list.append(self.targets[i_img])

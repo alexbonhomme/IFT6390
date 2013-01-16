@@ -20,43 +20,46 @@ class Main (object):
 
     def __init__(self, K=1, Theta=0.5, 
                  batch_size=1, n_epoch=100, n_hidden=10, lr=0.001, wd=0.,
-                 trainFile="", testFile="", debug_mode=True, categorie="ORL", nbExemples=5, stock=0, curv=0):
-        # KNN
-        self.K = K
-        
-        # Parzen
-        self.Theta = Theta
-        
-        # NNET
-        self.batch_size = batch_size
-        self.n_epoch = n_epoch
-        self.n_hidden = n_hidden
-        self.lr = lr
-        self.wd = wd
-        
-        # categorie  ("LFW", "ORL", "BOTH")
-        self.categorie=categorie
-        self.nbExemples=nbExemples
-        if self.categorie not in ["LFW","ORL"]:
-            log.error("La  categorie d'images étudiées doit être LFW ou ORL")
-        if self.nbExemples<0:
-            log.error("Le nombre d'exemples envisagés doit être positif")
-        if self.nbExemples>=10 and self.categorie=="ORL":
-            log.error("Le nombre d'entrees de l'ensemble d'entrainement doit etre constitue de moins de 10 exemples par classes pour le domaine ORL")
+				 trainFile="", testFile="", debug_mode=True, categorie="ORL", nbExemples=5, stock=0, curv=0):
+		# KNN
+		self.K = K
 
-        # stock & courbes
-        self.stock=stock
-        if self.stock not in [0,1]:
-            self.stock=0
-        self.curv=curv
-        if self.curv not in [0,1]:
-            self.curv=0
+		# Parzen
+		self.Theta = Theta
 
-        # logger pour debbug
-        if debug_mode:
-            log.basicConfig(stream=sys.stderr, level=log.DEBUG)
-        else:
-            log.basicConfig(stream=sys.stderr, level=log.INFO)
+		# NNET
+		self.batch_size = batch_size
+		self.n_epoch = n_epoch
+		self.n_hidden = n_hidden
+		self.lr = lr
+		self.wd = wd
+
+		# categorie  ("LFW", "ORL", "BOTH")
+		self.categorie = categorie
+		self.nbExemples = nbExemples
+		if self.categorie not in ["LFW","ORL"]:
+			log.error("La  categorie d'images étudiées doit être LFW ou ORL")
+			exit(-1)
+		if self.nbExemples < 0:
+			log.error("Le nombre d'exemples envisagés doit être positif")
+			exit(-1)
+		if self.nbExemples >= 10 and self.categorie == "ORL":
+			log.error("Le nombre d'entrees de l'ensemble d'entrainement doit etre constitue de moins de 10 exemples par classes pour le domaine ORL")
+			exit(-1)
+
+		# stock & courbes
+		self.stock=stock
+		if self.stock not in [0,1]:
+			self.stock=0
+		self.curv=curv
+		if self.curv not in [0,1]:
+			self.curv=0
+
+		# logger pour debbug
+		if debug_mode:
+			log.basicConfig(stream=sys.stderr, level=log.DEBUG)
+		else:
+			log.basicConfig(stream=sys.stderr, level=log.INFO)
     
     #TODO trouver un nom plus subtile..?
     def main(self, algo="KNN", textview=None):
@@ -65,7 +68,7 @@ class Main (object):
         def print_output(text):
             if textview != None:
                 buf = textview.get_buffer()
-                buf.insert_at_cursor(text)
+                buf.insert_at_cursor(text + "\n")
                 textview.scroll_mark_onscreen(buf.get_insert())
             else:
                 log.info(text)
@@ -74,7 +77,7 @@ class Main (object):
         listeRes=[]
 
         # creation des trainFile et testFile
-        log.debug("Construction des fichiers d'entrainement")
+        print_output("Construction des fichiers d'entrainement...")
         tools.constructLfwNamesCurrent( self.nbExemples )
         #TODO ca ne sert plus a rien finalement
         ( nbClassesLFW, nbClassesORL ) = tools.trainAndTestConstruction( self.nbExemples )
@@ -83,13 +86,13 @@ class Main (object):
         dataTrain, dataTrainIndices, nClass = tools.loadImageData( "train", self.categorie)
         
         # tranformation pca
-        log.info("Calcul des vecteurs propres.")
+        print_output("Calcul des vecteurs propres...")
         pca_model = PCA( dataTrain )
         pca_model.transform() # on transforme les donné dans un le "eigen space"
 
         ##### Recherche pas KNN
         if algo == "KNN":
-            log.info("Début de l'algorithme des K plus proches voisins.")
+            print_output("Début de l'algorithme des K plus proches voisins...")
             
             # On build le model pour recherche par KNN
             knn_model = KNN( pca_model.getWeightsVectors(), dataTrainIndices, nClass, self.K )
@@ -152,7 +155,7 @@ class Main (object):
         
         #### Recherche pas NNET
         elif algo == "NNET":
-			log.info("Début de l'algorithme du Perceptron multicouche.")
+			print_output("Début de l'algorithme du Perceptron multicouche...")
 			
 			# parametre, donnees, etc...
 			dataTrain = pca_model.getWeightsVectors()
