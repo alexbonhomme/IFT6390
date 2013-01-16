@@ -40,9 +40,13 @@ class Main (object):
         if self.categorie not in ["LFW","ORL"]:
             log.error("La  categorie d'images étudiées doit être LFW ou ORL")
         if self.nbExemples<0:
+<<<<<<< HEAD
              log.error("Le nombre d'exemples envisagés doit être positif")
         if self.nbExemples>=400 and self.categorie=="LFW":
             log.error("Le nombre d'entrees de l'ensemble d'entrainement doit etre constitue de moins de 400 exemples par classes pour le domaine LFW")
+=======
+            log.error("Le nombre d'exemples envisagés doit être positif")
+>>>>>>> 7f73815da471d26e2f940b0bed70b2ae0aa2b1a6
         if self.nbExemples>=10 and self.categorie=="ORL":
             log.error("Le nombre d'entrees de l'ensemble d'entrainement doit etre constitue de moins de 10 exemples par classes pour le domaine ORL")
 
@@ -78,20 +82,18 @@ class Main (object):
         # creation des trainFile et testFile
         log.debug("Construction des fichiers d'entrainement")
         tools.constructLfwNamesCurrent( self.nbExemples + 2 )   # +2 car on envisage un minimum de 2 exemples test
+
+        #TODO ca ne sert plus a rien finalement
         ( nbClassesLFW, nbClassesORL ) = tools.trainAndTestConstruction( self.nbExemples )
 
         # Chargement des données
-        dataTrain, dataTrainIndices = tools.loadImageData( "train", self.categorie)
+        dataTrain, dataTrainIndices, nClass = tools.loadImageData( "train", self.categorie)
         
         # tranformation pca
         log.info("Calcul des vecteurs propres.")
         pca_model = PCA( dataTrain )
         pca_model.transform() # on transforme les donné dans un le "eigen space"
-        
-        # Calcul du nombre de class
-        #TODO Devrait peut etre etre inclu dans le fichier de test... maybe
-       	nClass = tools.countClass( dataTrainIndices )
-        
+
         ##### Recherche pas KNN
         if algo == "KNN":
             log.info("Début de l'algorithme des K plus proches voisins.")
@@ -105,7 +107,7 @@ class Main (object):
             ## TEST ###########################
             #TODO Toute cette partie est a revoir pour sortir des graphes
             # de train, validation, test
-            dataTest, dataTestIndices = tools.loadImageData( "test", self.categorie )
+            dataTest, dataTestIndices, nClass = tools.loadImageData( "test", self.categorie )
 
             # compteurs de bons résultats   
             nbGoodResult = 0
@@ -162,7 +164,8 @@ class Main (object):
 			# parametre, donnees, etc...
 			dataTrain = pca_model.getWeightsVectors()
 			dataTrainTargets = (dataTrainIndices - 1).reshape(dataTrainIndices.shape[0], -1)
-			train_set = np.concatenate((dataTrain, dataTrainTargets), axis=1)
+			#! contrairement au KNN le NNET prends les vecteurs de features en ligne et non pas en colonne
+			train_set = np.concatenate((dataTrain.T, dataTrainTargets), axis=1)
 
 			# On build et on entraine le model pour recherche par KNN
 			nnet_model = NeuralNetwork( dataTrain.shape[0], self.n_hidden, nClass, self.lr, self.wd )
@@ -171,7 +174,7 @@ class Main (object):
 			## TEST ###########################
 			#TODO Toute cette partie est a revoir pour sortir des graphes
 			# de train, validation, test
-			dataTest, dataTestIndices = tools.loadImageData( "test", self.categorie )
+			dataTest, dataTestIndices, nClass = tools.loadImageData( "test", self.categorie )
 
 			# compteurs de bons résultats   
 			nbGoodResult = 0
