@@ -20,46 +20,49 @@ class Main (object):
 
     def __init__(self, K=1, Theta=0.5, 
                  batch_size=1, n_epoch=100, n_hidden=10, lr=0.001, wd=0.,
-				 trainFile="", testFile="", debug_mode=True, categorie="ORL", nbExemples=5, stock=0, curv=0):
-		# KNN
-		self.K = K
+                 trainFile="", testFile="", debug_mode=True, categorie="ORL", nbExemples=5, stock=0, curv=0):
+        # KNN
+        self.K = K
+        
+        # Parzen
+        self.Theta = Theta
+        
+        # NNET
+        self.batch_size = batch_size
+        self.n_epoch = n_epoch
+        self.n_hidden = n_hidden
+        self.lr = lr
+        self.wd = wd
+        
+        # categorie  ("LFW", "ORL", "BOTH")
+        self.categorie=categorie
+        self.nbExemples=nbExemples
+        if self.categorie not in ["LFW","ORL"]:
+            log.error("La  categorie d'images étudiées doit être LFW ou ORL")
+        if self.nbExemples<0:
+<<<<<<< HEAD
+             log.error("Le nombre d'exemples envisagés doit être positif")
+        if self.nbExemples>=400 and self.categorie=="LFW":
+            log.error("Le nombre d'entrees de l'ensemble d'entrainement doit etre constitue de moins de 400 exemples par classes pour le domaine LFW")
+=======
+            log.error("Le nombre d'exemples envisagés doit être positif")
+>>>>>>> 7f73815da471d26e2f940b0bed70b2ae0aa2b1a6
+        if self.nbExemples>=10 and self.categorie=="ORL":
+            log.error("Le nombre d'entrees de l'ensemble d'entrainement doit etre constitue de moins de 10 exemples par classes pour le domaine ORL")
 
-		# Parzen
-		self.Theta = Theta
+        # stock & courbes
+        self.stock=stock
+        if self.stock not in [0,1]:
+            self.stock=0
+        self.curv=curv
+        if self.curv not in [0,1]:
+            self.curv=0
 
-		# NNET
-		self.batch_size = batch_size
-		self.n_epoch = n_epoch
-		self.n_hidden = n_hidden
-		self.lr = lr
-		self.wd = wd
-
-		# categorie  ("LFW", "ORL", "BOTH")
-		self.categorie = categorie
-		self.nbExemples = nbExemples
-		if self.categorie not in ["LFW","ORL"]:
-			log.error("La  categorie d'images étudiées doit être LFW ou ORL")
-			exit(-1)
-		if self.nbExemples < 0:
-			log.error("Le nombre d'exemples envisagés doit être positif")
-			exit(-1)
-		if self.nbExemples >= 10 and self.categorie == "ORL":
-			log.error("Le nombre d'entrees de l'ensemble d'entrainement doit etre constitue de moins de 10 exemples par classes pour le domaine ORL")
-			exit(-1)
-
-		# stock & courbes
-		self.stock=stock
-		if self.stock not in [0,1]:
-			self.stock=0
-		self.curv=curv
-		if self.curv not in [0,1]:
-			self.curv=0
-
-		# logger pour debbug
-		if debug_mode:
-			log.basicConfig(stream=sys.stderr, level=log.DEBUG)
-		else:
-			log.basicConfig(stream=sys.stderr, level=log.INFO)
+        # logger pour debbug
+        if debug_mode:
+            log.basicConfig(stream=sys.stderr, level=log.DEBUG)
+        else:
+            log.basicConfig(stream=sys.stderr, level=log.INFO)
     
     #TODO trouver un nom plus subtile..?
     def main(self, algo="KNN", textview=None):
@@ -77,8 +80,9 @@ class Main (object):
         listeRes=[]
 
         # creation des trainFile et testFile
-        print_output("Construction des fichiers d'entrainement...")
-        tools.constructLfwNamesCurrent( self.nbExemples )
+        log.debug("Construction des fichiers d'entrainement")
+        tools.constructLfwNamesCurrent( self.nbExemples + 2 )   # +2 car on envisage un minimum de 2 exemples test
+
         #TODO ca ne sert plus a rien finalement
         ( nbClassesLFW, nbClassesORL ) = tools.trainAndTestConstruction( self.nbExemples )
 
@@ -196,6 +200,7 @@ class Main (object):
                             fichier = open("curvAccuracy"+self.categorie,"a")
                             fichier.write(str(self.nbExemples)+" "+str(res)+"\n")
                             fichier.close()
+        return listeRes
 
 #### FIN CLASSE MAIN ####################################
 
@@ -325,15 +330,19 @@ if __name__ == "__main__":
         yVector = []
         if curv == 1 :
             if categorie == "ORL" :
-                tools.completion( xVector, 8)
+                xVector = [1,2,3]
+                #tools.completion( xVector, 8)
             elif categorie == "LFW" :
                 xVector = [ nbExemples ]
                 tools.completion( xVector, 10)
         faceReco = Main( K=K, Theta=Theta, trainFile=trainFile, testFile=testFile, categorie=categorie, stock=stock, curv=curv, nbExemples=nbExemples, debug_mode=debug_mode)
         for n in xVector:
             faceReco.nbExemples = n
-            listeRes=faceReco.main( algo=algo_type )
-            yVector.append( listeRes )
+            listeRes = faceReco.main( algo=algo_type )
+            yVector.append( listeRes[0] )
+        print(xVector)
+        print(yVector)
+        tools.drawCurves( xVector, yVector, "r+", xlabel="Nbre ex. train par classe", ylabel="Precision")
         
     
     elif algo_type == "NNET":
