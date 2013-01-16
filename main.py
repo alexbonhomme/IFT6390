@@ -76,20 +76,17 @@ class Main (object):
         # creation des trainFile et testFile
         log.debug("Construction des fichiers d'entrainement")
         tools.constructLfwNamesCurrent( self.nbExemples )
+        #TODO ca ne sert plus a rien finalement
         ( nbClassesLFW, nbClassesORL ) = tools.trainAndTestConstruction( self.nbExemples )
 
         # Chargement des données
-        dataTrain, dataTrainIndices = tools.loadImageData( "train", self.categorie)
+        dataTrain, dataTrainIndices, nClass = tools.loadImageData( "train", self.categorie)
         
         # tranformation pca
         log.info("Calcul des vecteurs propres.")
         pca_model = PCA( dataTrain )
         pca_model.transform() # on transforme les donné dans un le "eigen space"
-        
-        # Calcul du nombre de class
-        #TODO Devrait peut etre etre inclu dans le fichier de test... maybe
-       	nClass = tools.countClass( dataTrainIndices )
-        
+
         ##### Recherche pas KNN
         if algo == "KNN":
             log.info("Début de l'algorithme des K plus proches voisins.")
@@ -169,7 +166,7 @@ class Main (object):
 			## TEST ###########################
 			#TODO Toute cette partie est a revoir pour sortir des graphes
 			# de train, validation, test
-			dataTest, dataTestIndices = tools.loadImageData( "test", self.categorie )
+			dataTest, dataTestIndices, nClass = tools.loadImageData( "test", self.categorie )
 
 			# compteurs de bons résultats   
 			nbGoodResult = 0
