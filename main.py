@@ -6,7 +6,7 @@
 #
 ###################################
 import tools
-import sys
+import sys, os
 import logging as log
 import numpy as np
 
@@ -75,8 +75,8 @@ class Main (object):
 
         # creation des trainFile et testFile
         log.debug("Construction des fichiers d'entrainement")
-        tools.constructLfwNamesCurrent(self.nbExemples)
-        tools.trainAndTestConstruction(self.nbExemples)
+        tools.constructLfwNamesCurrent( self.nbExemples )
+        ( nbClassesLFW, nbClassesORL ) = tools.trainAndTestConstruction( self.nbExemples )
 
         # Chargement des données
         dataTrain, dataTrainIndices = tools.loadImageData( "train", self.categorie)
@@ -183,28 +183,18 @@ class Main (object):
 				resultNNET = np.argmax(nnet_model.compute_predictions( proj ), axis=1)[0] + 1
 				if(resultNNET == dataTestIndices[i]):
 					nbGoodResult += 1
-
-<<<<<<< HEAD
-            res = (float(nbGoodResult) / float(dataTest.shape[1])) * 100.
-            out_str = "\nAccuracy : %.3f" % res + "%\n"
-            print_output(out_str)
-            #### Trace de courbes
-            if self.stock == 1 :
-                fichier = open("curvAccuracy"+self.categorie,"a")
-                fichier.write(str(self.nbExemples)+" "+str(res)+"\n")
-                fichier.close()
-            
-                
-            
-=======
 				out_str = "Result: "+ str( resultNNET ) + " | Expected: "+ str( dataTestIndices[i] ) +"\n" # +1 car l'index de la matrice commence a 0
 				print_output(out_str)
 
 			res = (float(nbGoodResult) / float(dataTest.shape[1])) * 100.
 			out_str = "\nAccuracy : %.3f" % res + "%\n"
 			print_output(out_str)
->>>>>>> 961c52da3fdae6564a312c93466f51466cd8f385
-            
+                        
+                        #### Trace de courbes
+                        if self.stock == 1 :
+                            fichier = open("curvAccuracy"+self.categorie,"a")
+                            fichier.write(str(self.nbExemples)+" "+str(res)+"\n")
+                            fichier.close()
 
 #### FIN CLASSE MAIN ####################################
 
@@ -334,7 +324,7 @@ if __name__ == "__main__":
         yVector = []
         if curv == 1 :
             if categorie == "ORL" :
-                tools.completion( xVector, 9)
+                tools.completion( xVector, 8)
             elif categorie == "LFW" :
                 xVector = [ nbExemples ]
                 tools.completion( xVector, 10)

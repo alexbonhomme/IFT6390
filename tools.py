@@ -19,7 +19,6 @@ def loadImageData( trainTest="train", categorie="ORL"):
 	if categorie=="LFW":
 		log.debug("Chargement des données LFW")
 		imageList = np.array( listeLFW )
-
 		# Recuperation des valeurs depuis les images avec un recentrage sur les visages
 		vj_model = vj.Viola_Jones()
 		return vj_model.detections_faces_list(imageList[:,1]), imageList[:, 0].astype(int)
@@ -175,7 +174,6 @@ def trainAndTestConstruction(nbTrain):
 	lignes = lignes[:-1]  #On supprime le dernier element ''
 	fichierTrain = file('trainFile','w')
 	fichierTest = file('testFile','w')
-	
 	nom = []
 	nbMax = []
 	for i in range(len(lignes)):
@@ -218,7 +216,8 @@ def trainAndTestConstruction(nbTrain):
 		fichierTest.write(listeTestORL[i]+'\n')
 	
 	fichierTrain.close()
-	fichierTest.close()		
+	fichierTest.close()
+	return ( classesTrainLFW, classesTrainORL )
 
 """
 	Recupere les chemins depuis trainFile et testFile, ainsi que les classes. Utilisee par loadImageData()
@@ -377,13 +376,13 @@ def completion(liste, nbElements):
 	liste.sort()
 	compteur = len(liste)
 	valeur = liste[0] - 1
-	while valeur > 0 and compteur <= nbElements :
+	while valeur > 0 and compteur < nbElements :
 		liste.append(valeur)
 		compteur += 1
 		valeur -= 1
 	liste.sort()
 	valeur = liste[-1] + 1
-	while compteur <= nbElements :
+	while compteur < nbElements :
 		liste.append(valeur)
 		compteur += 1
 		valeur += 1
