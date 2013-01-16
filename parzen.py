@@ -63,7 +63,7 @@ class ParzenWindows (object):
 		        c[ voisins[i]-1 ] += dists[ i ] #-1 car les etiquettes commences a 1 mais le tab a zero
 
         #DEBBUG
-        log.debug("Parzen preds: " + str(c)) 
+        #log.debug("Parzen preds: " + str(c)) 
 
         return np.argmax( c ) + 1
 

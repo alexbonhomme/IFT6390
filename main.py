@@ -40,7 +40,7 @@ class Main (object):
         if self.categorie not in ["LFW","ORL"]:
             log.error("La  categorie d'images étudiées doit être LFW ou ORL")
         if self.nbExemples<0:
-             log.error("Le nombre d'exemples envisagés doit être positif")
+            log.error("Le nombre d'exemples envisagés doit être positif")
         if self.nbExemples>=10 and self.categorie=="ORL":
             log.error("Le nombre d'entrees de l'ensemble d'entrainement doit etre constitue de moins de 10 exemples par classes pour le domaine ORL")
 
@@ -100,7 +100,7 @@ class Main (object):
             ## TEST ###########################
             #TODO Toute cette partie est a revoir pour sortir des graphes
             # de train, validation, test
-            dataTest, dataTestIndices = tools.loadImageData( "test", self.categorie )
+            dataTest, dataTestIndices, nClass = tools.loadImageData( "test", self.categorie )
 
             # compteurs de bons résultats   
             nbGoodResult = 0
@@ -157,7 +157,8 @@ class Main (object):
 			# parametre, donnees, etc...
 			dataTrain = pca_model.getWeightsVectors()
 			dataTrainTargets = (dataTrainIndices - 1).reshape(dataTrainIndices.shape[0], -1)
-			train_set = np.concatenate((dataTrain, dataTrainTargets), axis=1)
+			#! contrairement au KNN le NNET prends les vecteurs de features en ligne et non pas en colonne
+			train_set = np.concatenate((dataTrain.T, dataTrainTargets), axis=1)
 
 			# On build et on entraine le model pour recherche par KNN
 			nnet_model = NeuralNetwork( dataTrain.shape[0], self.n_hidden, nClass, self.lr, self.wd )

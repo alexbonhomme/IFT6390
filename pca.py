@@ -11,7 +11,14 @@ class PCA (object):
         self.eigenVectors = None
         self.eigenValues = None
         self.weightsVectors = None
+        
+        self.eigenKeepPercent = 0.8
     
+    """
+    	IMPORTANT:
+    		Cette fonction retourne les vecteurs propres/de poids/etc.
+    		sous forme de vecteur colonne (bout a bout dans une matrice)
+    """
     def transform(self, n_eigens=None):
         # Normalisation des vecteurs images
         self.avg = np.mean(self.data_init, axis=1)
@@ -26,7 +33,7 @@ class PCA (object):
         # Reduction du nombre de eigenface à K
         #TODO Calculer le coefficient optimal
         #TODO uniliser le parametre n_eigen
-        k = A.shape[1]
+        k = int(A.shape[1]*self.eigenKeepPercent)
         log.debug("Dimentionnality: "+ str(int(k)) +" - Before: "+ str(A.shape[1]))
         
         self.eigenVectors = U[:, :int(k)]
@@ -40,7 +47,9 @@ class PCA (object):
     
         return self.eigenVectors, self.eigenValues, self.weightsVectors
         
-    ##### ATTENTION les accesseurs/fcontions suivants doivent êtres appelé APRES transform()
+    """
+    	ATTENTION les accesseurs/fonctions suivants doivent êtres appelé APRES transform()
+    """
     # Accesseur
     def getAVG(self):
         return self.avg

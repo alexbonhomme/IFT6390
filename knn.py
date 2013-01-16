@@ -32,6 +32,9 @@ class KNN (object):
         dists = np.zeros(self.k)
         dists[:] = float('inf')
         
+        # calcule la distance entre un vecteur colonne et une matrice
+        # Note: si le vecteur est en ligne, il sera automatiquement
+        # redimentionné en colonne.
         dist = self.dist_func( test_set, self.train_set )
 
         for i in xrange( dist.shape[0] ):
@@ -39,9 +42,6 @@ class KNN (object):
 	        if( dist[i] < dists[j] ):
 		        voisins[j] = self.train_targets[i] # etiquette de la donnee
 		        dists[j] = dist[i] # distance
-
-        ## DEBUG
-        #print "Voisins:\t"+ str(voisins)
 
         # On somme le nombre de voisin de la meme classe
         # pour trouver quelle est la classe majoritaire
@@ -51,7 +51,7 @@ class KNN (object):
 
 
         ## DEBUG
-        log.debug("KNN preds: " + str(c)) 
+        #log.debug("KNN preds: " + str(c)) 
 
         return np.argmax( c ) + 1
 
