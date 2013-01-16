@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import numpy as np
 import sys
+import logging as log
 import os
 import viola_jones as vj
 import logging as log
@@ -18,10 +19,9 @@ def loadImageData( trainTest="train", categorie="ORL"):
 	if categorie=="LFW":
 		log.debug("Chargement des données LFW")
 		imageList = np.array( listeLFW )
-
 		# Recuperation des valeurs depuis les images avec un recentrage sur les visages
 		vj_model = vj.Viola_Jones()
-		return vj_model.detections_faces_list(imageList[:,1]), imageList[:, 0].astype(int)
+		return vj_model.detections_faces_list(imageList[:,1], imageList[:, 0].astype(int))
 
 	elif categorie=="ORL":
 		log.debug("Chargement des données ORL")
@@ -29,12 +29,17 @@ def loadImageData( trainTest="train", categorie="ORL"):
 		imageList = np.array( listeORL )
 
 		# Recuperation des valeurs depuis les images sans aucune transformation
-		data = []
-		for image in imageList[:,1]:
-			img = im.open(image)
-			data.append( list(img.getdata()) )
+		faces_list = []
+		compute_nb_class = []
+		for i in xrange( len(imageList[:,1]) ):
+			# calcul du nombre de classes
+			if( not imageList[i, 0] in compute_nb_class ):
+				compute_nb_class.append( imageList[i, 0] )
+			
+			img = im.open(imageList[i,1])
+			faces_list.append( list(img.getdata()) )
 
-		return np.transpose( data ), imageList[:, 0].astype(int)
+		return np.transpose(faces_list), imageList[:, 0].astype(int), len(compute_nb_class)
 
 """
         Modifie les couleurs de l'image en nuances de gris
@@ -174,7 +179,6 @@ def trainAndTestConstruction(nbTrain):
 	lignes = lignes[:-1]  #On supprime le dernier element ''
 	fichierTrain = file('trainFile','w')
 	fichierTest = file('testFile','w')
-	
 	nom = []
 	nbMax = []
 	for i in range(len(lignes)):
@@ -217,7 +221,8 @@ def trainAndTestConstruction(nbTrain):
 		fichierTest.write(listeTestORL[i]+'\n')
 	
 	fichierTrain.close()
-	fichierTest.close()		
+	fichierTest.close()
+	return ( classesTrainLFW, classesTrainORL )
 
 """
 	Recupere les chemins depuis trainFile et testFile, ainsi que les classes. Utilisee par loadImageData()
@@ -290,7 +295,7 @@ def countClass( targets ):
     for i in range(0, int( targets.shape[0] )):
         if( not targets[i] in m ):
             m.append( targets[i] )
-    return np.size(m)
+    return len(m)
 
 """
     Non linéarité de type softmax
@@ -366,4 +371,25 @@ def drawCurves(x, y, cType, legend="", xlim="", ylim="", xlabel="", ylabel="", t
 
     # close
     pylab.clf()
+
+
+"""
+        Complete la liste de valeurs avec un pas de 1, de sorte à ce que toutes les valeurs soient >1
+"""
+def completion(liste, nbElements):
+
+	liste.sort()
+	compteur = len(liste)
+	valeur = liste[0] - 1
+	while valeur > 0 and compteur < nbElements :
+		liste.append(valeur)
+		compteur += 1
+		valeur -= 1
+	liste.sort()
+	valeur = liste[-1] + 1
+	while compteur < nbElements :
+		liste.append(valeur)
+		compteur += 1
+		valeur += 1
+		
 

@@ -17,6 +17,7 @@ class Viola_Jones (object):
 		log.debug("Initialisation du modèle de detection Viola&Jones")
 		self.hc = cv.Load("haarcascade/haarcascade_frontalface_alt.xml")
 		self.faces = []
+		self.targets = []
 
 		# initilisation du cadre des visages		
 		self.w_resize = 96
@@ -24,28 +25,27 @@ class Viola_Jones (object):
 		self.ratio_resize = self.w_resize/float(self.h_resize)
 
     #detection des visages sur une liste d'image se trouvant dans toute l'arborescence du dossier
-    def detections_faces_list(self, array_images):
+    def detections_faces_list(self, array_images, array_classes):
 		log.info("Début de la détection des visages (" + str(len(array_images)) + " images)")
-		data = []
 
 		#
 		# Détection des visages
 		# et calcul de taille de la zone d'intéret
 		#
-		i = 1
-		for img in array_images:
+		for i_img in xrange(len(array_images)):
 			# detection des visage
-			face_detect = cv.HaarDetectObjects(cv.LoadImage(img, 0), self.hc, cv.CreateMemStorage())
+			face_detect = cv.HaarDetectObjects(cv.LoadImage(array_images[i_img], 0), self.hc, cv.CreateMemStorage())
 			self.faces.append( face_detect )
+			self.targets.append( array_classes[i_img] )
+			
 
 			# Affichage du deroulement
-			sys.stdout.write("\r"+str(i)+"/"+str(len(array_images)))
+			sys.stdout.write("\r"+str(i_img+1)+"/"+str(len(array_images)))
 			sys.stdout.flush()
-			i += 1
 			
 			# aucun visage detecté
 			if len(face_detect) == 0:
-				log.warning("Aucun visage n'a été détecté sur l'image : "+ img)
+				log.warning("Aucun visage n'a été détecté sur l'image : "+ array_images[i_img])
 		
 		sys.stdout.write("\n")
 
@@ -53,8 +53,15 @@ class Viola_Jones (object):
 		# Extraction du visage 
 		# et vectorisation
 		#
-		data = []
+		faces_list = []
+		targets_list = []
+		compute_nb_class = []
 		for i_img in xrange(len(array_images)):
+			# calcul du nombre de classes
+			if( not self.targets[i_img] in compute_nb_class ):
+			    compute_nb_class.append( self.targets[i_img] )
+		
+		
 			# on découpe l'image selon les visages et on en retourne des vecteurs images
 			for ((x, y, w, h), n) in self.faces[i_img]:
 				vectFace = []
@@ -88,9 +95,13 @@ class Viola_Jones (object):
 					vect = np.asarray(face).reshape(self.w_resize*self.h_resize,)
 		        
 		        #log.debug(vect.shape)
-		        data.append(vect)
+		        faces_list.append(vect)
+		        targets_list.append(self.targets[i_img])
+		        
 
-		log.info("Fin de la détection : " + str(len(data)) + " visages ont été détectés.")
+		log.info("Fin de la détection : " + str(len(faces_list)) + " visages ont été détectés.")
 
-		return np.array(data).T
+		tmp = np.array(targets_list).reshape(len(targets_list), 1)
+		log.debug(tmp.shape)
+		return np.transpose(faces_list), tmp, len(compute_nb_class)
 
