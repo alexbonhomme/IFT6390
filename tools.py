@@ -4,6 +4,7 @@ import sys
 import logging as log
 import os
 import viola_jones as vj
+import logging as log
 
 """
 	Importe les images liste "filename" et les convertient en vecteurs
@@ -12,11 +13,11 @@ def loadImageData( trainTest="train", categorie="ORL"):
 
 	import Image as im
 
-	# recupere chemins et indices de classes
-	(listeLFW,listeORL)=cheminsToLoad(trainTest)
+    # recupere chemins et indices de classes
+	(listeLFW, listeORL) = cheminsToLoad(trainTest)
 
 	if categorie=="LFW":
-
+		log.debug("Chargement des données LFW")
 		imageList = np.array( listeLFW )
 
 		# Recuperation des valeurs depuis les images avec un recentrage sur les visages
@@ -24,6 +25,7 @@ def loadImageData( trainTest="train", categorie="ORL"):
 		return vj_model.detections_faces_list(imageList[:,1]), imageList[:, 0].astype(int)
 
 	elif categorie=="ORL":
+		log.debug("Chargement des données ORL")
 
 		imageList = np.array( listeORL )
 
@@ -32,7 +34,7 @@ def loadImageData( trainTest="train", categorie="ORL"):
 		for image in imageList[:,1]:
 			img = im.open(image)
 			data.append( list(img.getdata()) )
-	
+
 		return np.transpose( data ), imageList[:, 0].astype(int)
 
 """
@@ -40,9 +42,9 @@ def loadImageData( trainTest="train", categorie="ORL"):
 """
 def changeToGreyTot():
 
-	fichier=open("lfwNames.txt")
-	listeFiles=fichier.read().split('\n')
-	listeFiles=listeFiles[2:-1]
+	fichier = open("lfwNames.txt")
+	listeFiles = fichier.read().split('\n')
+	listeFiles = listeFiles[2:-1]
 	
 	for i in range(len(listeFiles)):
 		changeToGrey(listeFiles[i])
@@ -57,27 +59,27 @@ def changeToGrey(filename):
 	from pygame import image
 	import PIL
 	# Recuperation resolution
-	image=image.load(filename)
-	resolution=(image.get_width(),image.get_height())
+	image = image.load(filename)
+	resolution = (image.get_width(), image.get_height())
 	
 	# Modification pixels
 	img = Image.open(filename)
-	pix=img.load()
+	pix = img.load()
 	for i in range(resolution[0]):
 		for j in range(resolution[1]):
-			gris=int(round(0.299*pix[i,j][0]+0.587*pix[i,j][1]+0.114*pix[i,j][2]))
-			pix[i,j]=(gris,gris,gris)
+			gris = int(round(0.299*pix[i,j][0]+0.587*pix[i,j][1]+0.114*pix[i,j][2]))
+			pix[i,j] = (gris,gris,gris)
 	img.save(filename)
 
 """
         Recupere la liste des images de type precise ('lfw' ou 'orl')
 """
-def listPictures(indiceSeparation,liste,type="Databases/LFW/lfw"):
+def listPictures(indiceSeparation, liste, type="Databases/LFW/lfw"):
 		import os, mimetypes, random
-		classesTrain=0
-		classesTest=0
-		exemplesTrain=0
-		exemplesTest=0
+		classesTrain = 0
+		classesTest = 0
+		exemplesTrain = 0
+		exemplesTest = 0
 		with_extension = 1
  
 		path = os.path.join( os.getcwd(), type)
@@ -90,32 +92,32 @@ def listPictures(indiceSeparation,liste,type="Databases/LFW/lfw"):
 				count = len(root)
  
 			if(files):
-				compteur=0
-				ajoutTrain=1
-				ajoutTest=1
+				compteur = 0
+				ajoutTrain = 1
+				ajoutTest = 1
 				random.shuffle(files)
 				for f in files:
 					if int(with_extension) == 0:
 						f = f.split('.')[0]
-					if f!="README" and indiceSeparation==0:
+					if f != "README" and indiceSeparation == 0:
 						finalTrain.append(type+root[count:]+"/"+f)	
-					elif f!="README" and compteur<indiceSeparation and (root[count+1:] in liste or len(liste)==0):
-						if ajoutTrain==1:
-							classesTrain+=1
-						exemplesTrain+=1
+					elif f != "README" and compteur < indiceSeparation and (root[count+1:] in liste or len(liste) == 0):
+						if ajoutTrain == 1:
+							classesTrain += 1
+						exemplesTrain += 1
 						finalTrain.append(type+root[count:]+"/"+f)	
-						ajoutTrain=0
-						compteur+=1
-					elif f!="README" and compteur>=indiceSeparation and (root[count+1:] in liste or len(liste)==0):
-						if ajoutTest==1:
-							classesTest+=1
-						exemplesTest+=1
+						ajoutTrain = 0
+						compteur += 1
+					elif f != "README" and compteur >= indiceSeparation and (root[count+1:] in liste or len(liste) == 0):
+						if ajoutTest == 1:
+							classesTest += 1
+						exemplesTest += 1
 						finalTest.append(type+root[count:]+"/"+f)
-						ajoutTest=0
-						compteur+=1
+						ajoutTest = 0
+						compteur += 1
 					
              
-		return (finalTrain,finalTest,classesTrain,classesTest,exemplesTrain,exemplesTest)  
+		return (finalTrain, finalTest, classesTrain, classesTest, exemplesTrain, exemplesTest)  
 
 """
         Recupere la liste des dossiers de type LFW contenant au moins nbMaxImages+1 images, ainsi que le nombre d'images présentes
@@ -124,21 +126,21 @@ def constructLfwNamesCurrent(nbMaxImages):
 		import os, mimetypes, random
 
 		path = os.path.join( os.getcwd(),"Databases/LFW/lfw")
-		liste= []
-		dossier=""
+		liste = []
+		dossier = ""
 
 		for root, dirs, files in os.walk(path):
 			# get length of path
-			if( root is path ) :
+			if( root is path ):
 				count = len(root)
 			if(dirs):
-				dossier=dirs
+				dossier = dirs
 			if(files):
 				nbImages=0
-				if len(files)>nbMaxImages:
+				if len(files) > nbMaxImages:
 					liste.append([root[count+1:],len(files)])
 		liste.sort()
-		fichier=file("Databases/LFW/lfw-names_current.txt",'w')
+		fichier = file("Databases/LFW/lfw-names_current.txt",'w')
 		for i in range(len(liste)):
 			fichier.write(liste[i][0]+'\t'+str(liste[i][1])+'\n')
              
@@ -147,7 +149,7 @@ def constructLfwNamesCurrent(nbMaxImages):
         Sauvegarde les noms des images dans lfwNames.txt et orlNames.txt
 """
 def picturesDictionaryConstruction():
-	liste=listPictures(0,[])[0]
+	liste = listPictures(0,[])[0]
 	liste.sort()
 	fichier=file('./lfwNames.txt','w')
 	fichier.write("jpg\n")
@@ -155,9 +157,9 @@ def picturesDictionaryConstruction():
 	for i in range(len(liste)):
 		fichier.write(liste[i]+'\n')
 	fichier.close()
-	liste=listPictures(0,[],"Databases/orl_faces")[0]
+	liste = listPictures(0,[],"Databases/orl_faces")[0]
 	liste.sort()
-	fichier=file('./orlNames.txt','w')
+	fichier = file('./orlNames.txt','w')
 	fichier.write("pgm\n")
 	fichier.write(str(len(liste))+'\n')
 	for i in range(len(liste)):
@@ -168,38 +170,53 @@ def picturesDictionaryConstruction():
         Construit les fichiers train.txt et test.txt contenant les noms des images utilisées
 """
 def trainAndTestConstruction(nbTrain):
-	fichier=open("Databases/LFW/lfw-names_current.txt",'r')
-	lignes=fichier.read().split('\n')
-	lignes=lignes[:-1]  #On supprime le dernier element ''
-	fichierTrain=file('trainFile','w')
-	fichierTest=file('testFile','w')
-	nom=[]
-	nbMax=[]
+	fichier = open("Databases/LFW/lfw-names_current.txt",'r')
+	lignes = fichier.read().split('\n')
+	lignes = lignes[:-1]  #On supprime le dernier element ''
+	fichierTrain = file('trainFile','w')
+	fichierTest = file('testFile','w')
+	
+	nom = []
+	nbMax = []
 	for i in range(len(lignes)):
-		(mot,nb)=(lignes[i].split('\t')[0],int(lignes[i].split('\t')[1]))
+		(mot, nb) = (lignes[i].split('\t')[0], int(lignes[i].split('\t')[1]))
 		nbMax.append(nb)
 		nom.append(mot)
-	(listeTrain,listeTest,classesTrainLFW,classesTestLFW,exemplesTrainLFW,exemplesTestLFW)=listPictures(nbTrain,nom)
-	(listeTrainORL,listeTestORL,classesTrainORL,classesTestORL,exemplesTrainORL,exemplesTestORL)=listPictures(nbTrain,[],"Databases/orl_faces")
+	
+	(listeTrain, listeTest, 
+	 classesTrainLFW, classesTestLFW,
+	 exemplesTrainLFW, exemplesTestLFW) = listPictures(nbTrain, nom)
+	
+	(listeTrainORL, listeTestORL,
+	 classesTrainORL, classesTestORL,
+	 exemplesTrainORL, exemplesTestORL) = listPictures(nbTrain,[], "Databases/orl_faces")
+	
 	listeTrain.sort()
 	listeTest.sort()
 	listeTrainORL.sort()
 	listeTestORL.sort()
+	
 	fichierTrain.write(str(classesTrainLFW)+' '+str(exemplesTrainLFW)+'\n'+str(classesTrainORL)+' '+str(exemplesTrainORL)+'\n')
 	fichierTest.write(str(classesTestLFW)+' '+str(exemplesTestLFW)+'\n'+str(classesTestORL)+' '+str(exemplesTestORL)+'\n')
+	
 	for i in range(len(nom)):
 		fichierTrain.write(nom[i]+' '+str(np.min((nbTrain,nbMax[i])))+'\n')
-		nbTest=nbMax[i]-nbTrain
+		nbTest = nbMax[i] - nbTrain
 		if nbTest>0:
 			fichierTest.write(nom[i]+' '+str(nbTest)+'\n')
+	
 	for i in range(len(listeTrain)):
 		fichierTrain.write(listeTrain[i]+'\n')
+	
 	for i in range(len(listeTest)):
 		fichierTest.write(listeTest[i]+'\n')	
+	
 	for i in range(len(listeTrainORL)):
 		fichierTrain.write(listeTrainORL[i]+'\n')
+	
 	for i in range(len(listeTestORL)):
 		fichierTest.write(listeTestORL[i]+'\n')
+	
 	fichierTrain.close()
 	fichierTest.close()		
 
@@ -207,58 +224,35 @@ def trainAndTestConstruction(nbTrain):
 	Recupere les chemins depuis trainFile et testFile, ainsi que les classes. Utilisee par loadImageData()
 """
 def cheminsToLoad(trainTest="train"):
-	fichier=open(trainTest+"File")
-	contenu=fichier.read().split('\n')[:-1]
+	fichier = open(trainTest+"File")
+	contenu = fichier.read().split('\n')[:-1]
 	fichier.close()
-	(nbClassesLFW,nbExemplesLFW)=(int(contenu[0].split(' ')[0]),int(contenu[0].split(' ')[1]))
-	(nbClassesORL,nbExemplesORL)=(int(contenu[1].split(' ')[0]),int(contenu[1].split(' ')[1]))
-	nbExemplesPClasseORL=nbExemplesORL/nbClassesORL
-	nbExemplesPClasseLFW=nbExemplesLFW/nbClassesLFW
-	(listeLFW,listeORL)=([],[])
-	listeCheminsLFW=contenu[2+nbClassesLFW:2+nbClassesLFW+nbExemplesLFW]
-	listeCheminsORL=contenu[2+nbExemplesLFW+nbClassesLFW:]
-	classe=1
+	(nbClassesLFW, nbExemplesLFW) = (int(contenu[0].split(' ')[0]), int(contenu[0].split(' ')[1]))
+	(nbClassesORL, nbExemplesORL) = (int(contenu[1].split(' ')[0]), int(contenu[1].split(' ')[1]))
+	
+	#TODO
+	if nbClassesORL == 0:
+		nbClassesORL = 1
+	
+	nbExemplesPClasseORL = nbExemplesORL/nbClassesORL
+	nbExemplesPClasseLFW = nbExemplesLFW/nbClassesLFW
+	(listeLFW, listeORL) = ([],[])
+	listeCheminsLFW = contenu[2+nbClassesLFW:2+nbClassesLFW+nbExemplesLFW]
+	listeCheminsORL = contenu[2+nbExemplesLFW+nbClassesLFW:]
+	
+	classe = 1
 	for i in range(len(listeCheminsLFW)):
-		listeLFW.append([classe,listeCheminsLFW[i]])
-		if (i+1)%(nbExemplesPClasseLFW)==0:
-			classe+=1
-	classe=1
+		listeLFW.append([classe, listeCheminsLFW[i]])
+		if (i+1)%(nbExemplesPClasseLFW) == 0:
+			classe += 1
+	
+	classe = 1
 	for i in range(len(listeCheminsORL)):
-		listeORL.append([classe,listeCheminsORL[i]])
-		if (i+1)%(nbExemplesPClasseORL)==0:
-			classe+=1
-	return (listeLFW,listeORL)
+		listeORL.append([classe, listeCheminsORL[i]])
+		if (i+1)%(nbExemplesPClasseORL) == 0:
+			classe += 1
+	return (listeLFW, listeORL)
 
-"""
-	Sauvegarde les donné d'entrainement dans le fichier "train.xml"
-"""
-def storeData():
-	
-	from xml.dom.minidom import parseString
-	
-	#dom = parse("train.xml")
-	dom = parseString("<dataTrain></dataTrain>")
-	
-	x = dom.createElement("matrix")  # creates <foo />
-	mat = np.array([[1,2,3], [4,5,6]])
-	
-	txt = dom.createTextNode(str(mat))  # creates "hello, world!"
-	
-	x.appendChild(txt)  # results in <foo>hello, world!</foo>
-	dom.childNodes[0].appendChild(x)  # appends at end of 1st child's children
-	
-	# Ecriture dans le fichier xml
-	f = open("train.xml", 'w')
-	f.write( dom.toxml() )
-	f.close
-	
-def loadData():
-	from xml.dom.minidom import parse
-	
-	dom = parse("train.xml")
-	e = dom.getElementsByTagName("matrix")
-	x = np.array(e[0].childNodes[0].nodeValue)
-	print x.shape
 
 """
     Calcul la distance de Minkowski entre un vecteur et une matrice

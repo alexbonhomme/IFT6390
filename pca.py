@@ -20,6 +20,7 @@ class PCA (object):
         # Decomposition en valeurs propres
         # Mode "rapide"
         # U = eigenvectors
+        log.debug("Décomposition en valeurs propres (PCA).")
         U, S, V = np.linalg.svd( A, full_matrices=False )
 
         # Reduction du nombre de eigenface à K
@@ -29,7 +30,7 @@ class PCA (object):
         log.debug("Dimentionnality: "+ str(int(k)) +" - Before: "+ str(A.shape[1]))
         
         self.eigenVectors = U[:, :int(k)]
-        log.debug("self.eigenVectors shape:" + str(self.eigenVectors.shape) )
+        #log.debug("self.eigenVectors shape:" + str(self.eigenVectors.shape) )
 
         # Calcul des eigenvalues
         self.eigenValues = np.square(S)
