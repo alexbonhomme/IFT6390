@@ -40,13 +40,7 @@ class Main (object):
         if self.categorie not in ["LFW","ORL"]:
             log.error("La  categorie d'images étudiées doit être LFW ou ORL")
         if self.nbExemples<0:
-<<<<<<< HEAD
-             log.error("Le nombre d'exemples envisagés doit être positif")
-        if self.nbExemples>=400 and self.categorie=="LFW":
-            log.error("Le nombre d'entrees de l'ensemble d'entrainement doit etre constitue de moins de 400 exemples par classes pour le domaine LFW")
-=======
             log.error("Le nombre d'exemples envisagés doit être positif")
->>>>>>> 7f73815da471d26e2f940b0bed70b2ae0aa2b1a6
         if self.nbExemples>=10 and self.categorie=="ORL":
             log.error("Le nombre d'entrees de l'ensemble d'entrainement doit etre constitue de moins de 10 exemples par classes pour le domaine ORL")
 
