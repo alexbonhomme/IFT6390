@@ -109,8 +109,6 @@ def listPictures(indiceSeparation, liste, type="Databases/LFW/lfw"):
 				ajoutTest = 1
 				random.shuffle(files)
 				if len(files) >= ( indiceSeparation + borneMinTest ):
-					print(len(files))
-					print(root[count:])
 					for f in files:
 						if int(with_extension) == 0:
 							f = f.split('.')[0]
