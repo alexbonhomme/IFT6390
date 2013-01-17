@@ -5,6 +5,8 @@ import logging as log
 import os
 import viola_jones as vj
 import logging as log
+import pylab
+from matplotlib.font_manager import FontProperties
 
 """
 	Importe les images liste "filename" et les convertient en vecteurs
@@ -15,7 +17,6 @@ def loadImageData( trainTest="train", categorie="ORL"):
 
     # recupere chemins et indices de classes
 	(listeLFW, listeORL) = cheminsToLoad(trainTest)
-
 	if categorie=="LFW":
 		log.debug("Chargement des données LFW")
 		imageList = np.array( listeLFW )
@@ -38,7 +39,6 @@ def loadImageData( trainTest="train", categorie="ORL"):
 			
 			img = im.open(imageList[i,1])
 			faces_list.append( list(img.getdata()) )
-
 		return np.transpose(faces_list), imageList[:, 0].astype(int), len(compute_nb_class)
 
 """
@@ -52,7 +52,7 @@ def changeToGreyTot():
 	
 	for i in range(len(listeFiles)):
 		changeToGrey(listeFiles[i])
-		print(i)
+		
 		
 """
 
@@ -76,9 +76,9 @@ def changeToGrey(filename):
 	img.save(filename)
 
 """
-        Recupere la liste des images de type precise ('lfw' ou 'orl')
+        Recupere la liste des images de type precise ('lfw' ou 'orl').
 """
-def listPictures(indiceSeparation, liste, type="Databases/LFW/lfw"):
+def listPictures(nbImagesTrain, nbImages, liste, type="Databases/LFW/lfw"):
 		import os, mimetypes, random
 		classesTrain = 0
 		classesTest = 0
@@ -87,8 +87,8 @@ def listPictures(indiceSeparation, liste, type="Databases/LFW/lfw"):
 		with_extension = 1
  
 		path = os.path.join( os.getcwd(), type)
-		finalTrain= []
-		finalTest= []
+		finalTrain = []
+		finalTest = []
 
 		for root, dirs, files in os.walk(path):
 			# get length of path
@@ -100,33 +100,37 @@ def listPictures(indiceSeparation, liste, type="Databases/LFW/lfw"):
 				ajoutTrain = 1
 				ajoutTest = 1
 				random.shuffle(files)
-				for f in files:
-					if int(with_extension) == 0:
-						f = f.split('.')[0]
-					if f != "README" and indiceSeparation == 0:
-						finalTrain.append(type+root[count:]+"/"+f)	
-					elif f != "README" and compteur < indiceSeparation and (root[count+1:] in liste or len(liste) == 0):
-						if ajoutTrain == 1:
-							classesTrain += 1
-						exemplesTrain += 1
-						finalTrain.append(type+root[count:]+"/"+f)	
-						ajoutTrain = 0
-						compteur += 1
-					elif f != "README" and compteur >= indiceSeparation and (root[count+1:] in liste or len(liste) == 0):
-						if ajoutTest == 1:
-							classesTest += 1
-						exemplesTest += 1
-						finalTest.append(type+root[count:]+"/"+f)
-						ajoutTest = 0
-						compteur += 1
+
+			#### observe les dossiers avec suffisamment d'images
+			if len(files) >=  nbImages :
+					for f in files:
+						if int(with_extension) == 0:
+							f = f.split('.')[0]
+						if f != "README" and nbImages == 0:
+							finalTrain.append(type+root[count:]+"/"+f)	
+						elif f != "README" and compteur < nbImagesTrain and (root[count+1:] in liste or len(liste) == 0):
+							if ajoutTrain == 1:
+								classesTrain += 1
+							exemplesTrain += 1
+							finalTrain.append(type+root[count:]+"/"+f)	
+							ajoutTrain = 0
+							compteur += 1
+						elif f != "README" and compteur >= nbImagesTrain and (root[count+1:] in liste or len(liste) == 0):
+							if compteur < nbImages :
+								if ajoutTest == 1:
+									classesTest += 1
+								exemplesTest += 1
+								finalTest.append(type+root[count:]+"/"+f)
+								ajoutTest = 0
+								compteur += 1
 					
              
 		return (finalTrain, finalTest, classesTrain, classesTest, exemplesTrain, exemplesTest)  
 
 """
-        Recupere la liste des dossiers de type LFW contenant au moins nbMaxImages+1 images, ainsi que le nombre d'images présentes
+        Recupere la liste des dossiers de type LFW contenant au exactement nbImages images
 """
-def constructLfwNamesCurrent(nbMaxImages):
+def constructLfwNamesCurrent(nbImages):
 		import os, mimetypes, random
 
 		path = os.path.join( os.getcwd(),"Databases/LFW/lfw")
@@ -140,8 +144,7 @@ def constructLfwNamesCurrent(nbMaxImages):
 			if(dirs):
 				dossier = dirs
 			if(files):
-				nbImages=0
-				if len(files) > nbMaxImages:
+				if len(files) >= nbImages:
 					liste.append([root[count+1:],len(files)])
 		liste.sort()
 		fichier = file("Databases/LFW/lfw-names_current.txt",'w')
@@ -173,7 +176,13 @@ def picturesDictionaryConstruction():
 """
         Construit les fichiers train.txt et test.txt contenant les noms des images utilisées
 """
-def trainAndTestConstruction(nbTrain):
+def trainAndTestConstruction(pourcentageTrain, nbImages):
+	nbImagesTrain = int( pourcentageTrain * nbImages )
+	if nbImagesTrain == 0 :
+		nbImagesTrain = 1
+	nbImagesTest = nbImages - nbImagesTrain
+	nbImagesTrainORL = int( pourcentageTrain * np.min((nbImages, 10)))
+	nbImagesORL = np.min((nbImages, 10))
 	fichier = open("Databases/LFW/lfw-names_current.txt",'r')
 	lignes = fichier.read().split('\n')
 	lignes = lignes[:-1]  #On supprime le dernier element ''
@@ -188,25 +197,23 @@ def trainAndTestConstruction(nbTrain):
 	
 	(listeTrain, listeTest, 
 	 classesTrainLFW, classesTestLFW,
-	 exemplesTrainLFW, exemplesTestLFW) = listPictures(nbTrain, nom)
+	 exemplesTrainLFW, exemplesTestLFW) = listPictures(nbImagesTrain, nbImages, nom)
 	
 	(listeTrainORL, listeTestORL,
 	 classesTrainORL, classesTestORL,
-	 exemplesTrainORL, exemplesTestORL) = listPictures(nbTrain,[], "Databases/orl_faces")
+	 exemplesTrainORL, exemplesTestORL) = listPictures(nbImagesTrainORL, nbImagesORL, [], "Databases/orl_faces")
 	
 	listeTrain.sort()
 	listeTest.sort()
 	listeTrainORL.sort()
 	listeTestORL.sort()
-	
+
 	fichierTrain.write(str(classesTrainLFW)+' '+str(exemplesTrainLFW)+'\n'+str(classesTrainORL)+' '+str(exemplesTrainORL)+'\n')
 	fichierTest.write(str(classesTestLFW)+' '+str(exemplesTestLFW)+'\n'+str(classesTestORL)+' '+str(exemplesTestORL)+'\n')
 	
 	for i in range(len(nom)):
-		fichierTrain.write(nom[i]+' '+str(np.min((nbTrain,nbMax[i])))+'\n')
-		nbTest = nbMax[i] - nbTrain
-		if nbTest>0:
-			fichierTest.write(nom[i]+' '+str(nbTest)+'\n')
+		fichierTrain.write(nom[i]+' '+str(nbImagesTrain)+'\n')
+		fichierTest.write(nom[i]+' '+str(nbImagesTest)+'\n')
 	
 	for i in range(len(listeTrain)):
 		fichierTrain.write(listeTrain[i]+'\n')
@@ -234,9 +241,6 @@ def cheminsToLoad(trainTest="train"):
 	(nbClassesLFW, nbExemplesLFW) = (int(contenu[0].split(' ')[0]), int(contenu[0].split(' ')[1]))
 	(nbClassesORL, nbExemplesORL) = (int(contenu[1].split(' ')[0]), int(contenu[1].split(' ')[1]))
 	
-	#TODO
-	if nbClassesORL == 0:
-		nbClassesORL = 1
 	
 	nbExemplesPClasseORL = nbExemplesORL/nbClassesORL
 	nbExemplesPClasseLFW = nbExemplesLFW/nbClassesLFW
@@ -328,35 +332,37 @@ def softmaxMat(X):
 #   filename: si renseigné, enregistre la figure dans un fichier nommé <filename.png>
 #
 ######################################################################################
-def drawCurves(x, y, cType, legend="", xlim="", ylim="", xlabel="", ylabel="", title="", bGrid=True, bDisplay=True, filename=""):
+def drawCurves(x, y, cType, labels=[], legend="", xlim="", ylim="", xlabel="", ylabel="", title="", bGrid=True, bDisplay=True, filename=""):
     if len(x) != len(y) != len(cType):
         print "Attention: Les deux listes doivent avoir la même taille."
         return -1
-        
-    for i in xrange(len(x)):
-        pylab.plot(x[i], y[i], cType[i])
-        pylab.annotate('Min: '+ str(round(np.min(y[i]),3)),
+
+    fig = pylab.figure()
+    ax = pylab.subplot(111)
+    
+    for i in range(len(x)):
+	    pylab.plot(x[i], y[i], cType[i], label=labels[i])
+            pylab.annotate('Min: '+ str(np.min(y[i])),
                         xy=(np.argmin(y[i]), np.min(y[i])),
-                        #xytext=(np.argmin(y[i])-(y[i].shape[0]/1000.), np.min(y[i])+(y[i].shape[0]/1000.)),
-                        va='top',
-                        ha='center')
-                        #arrowprops=dict(arrowstyle='->'))
-	pylab.grid(bGrid)
+                        arrowprops=dict(arrowstyle='->'))
+	    pylab.grid(bGrid)
 	
 	# titre / labels / legende
-	if title != "":
+    box = ax.get_position()
+    ax.set_position([box.x0, box.y0, box.width * 0.7, box.height])
+    ax.legend(loc='center left', bbox_to_anchor=(1, 0.5))
+
+    if title != "":
 	    pylab.title(title)
-	if xlabel != "":
+    if xlabel != "":
 	    pylab.xlabel(xlabel)
-	if ylabel != "":
+    if ylabel != "":
 	    pylab.ylabel(ylabel)
-	if legend != "":
-	    pylab.legend(legend)
-	
+		    
 	# bornes
-	if xlim != "":
+    if xlim != "":
 	    pylab.xlim(xlim)
-	if ylim != "":
+    if ylim != "":
 	    pylab.ylim(ylim)
     
     # sauvegarde de la courbe

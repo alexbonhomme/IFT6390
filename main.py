@@ -20,7 +20,7 @@ class Main (object):
 
     def __init__(self, K=1, Theta=0.5, 
                  batch_size=1, n_epoch=100, n_hidden=10, lr=0.001, wd=0.,
-                 trainFile="", testFile="", debug_mode=True, categorie="ORL", nbExemples=5, stock=0, curv=0):
+                 trainFile="", testFile="", debug_mode=True, categorie="ORL", nbExemples=5, stock=0, curv=0, pourcentageTrain=0.5):
         # KNN
         self.K = K
         
@@ -34,23 +34,29 @@ class Main (object):
         self.lr = lr
         self.wd = wd
         
-        # categorie  ("LFW", "ORL", "BOTH")
-        self.categorie=categorie
-        self.nbExemples=nbExemples
-        if self.categorie not in ["LFW","ORL"]:
-            log.error("La  categorie d'images étudiées doit être LFW ou ORL")
-        if self.nbExemples<0:
-             log.error("Le nombre d'exemples envisagés doit être positif")
-        if self.nbExemples>=10 and self.categorie=="ORL":
-            log.error("Le nombre d'entrees de l'ensemble d'entrainement doit etre constitue de moins de 10 exemples par classes pour le domaine ORL")
+
+        # categorie  ("LFW", "ORL", "BOTH"), nbExemples
+        self.categorie = categorie
+        self.nbExemples = nbExemples
+        if self.categorie not in ["LFW", "ORL"]:
+            log.error("La  categorie d'images étudiees doit être LFW ou ORL")
+        if self.nbExemples<2:
+             log.error("Le nombre d'exemples envisages doit >= 2")
+        #if self.nbExemples>=400 and self.categorie=="LFW":
+            #log.error("Le nombre d'entrees de l'ensemble d'entrainement doit etre constitue de moins de 400 exemples par classes pour le domaine LFW")
+        if self.nbExemples>10 and self.categorie == "ORL":
+            log.error("Le nombre d'entrees pour l'etude doit etre constitue de moins de 10 exemples par classes pour le domaine ORL")
+        self.pourcentageTrain = pourcentageTrain
+        if self.pourcentageTrain >= 1.0 or self.pourcentageTrain <= 0 :
+            log.error("Le pourcentage doit etre dans ]0;1[")
 
         # stock & courbes
-        self.stock=stock
+        self.stock = stock
         if self.stock not in [0,1]:
-            self.stock=0
-        self.curv=curv
+            self.stock = 0
+        self.curv = curv
         if self.curv not in [0,1]:
-            self.curv=0
+            self.curv = 0
 
         # logger pour debbug
         if debug_mode:
@@ -65,7 +71,7 @@ class Main (object):
         def print_output(text):
             if textview != None:
                 buf = textview.get_buffer()
-                buf.insert_at_cursor(text)
+                buf.insert_at_cursor(text + "\n")
                 textview.scroll_mark_onscreen(buf.get_insert())
             else:
                 log.info(text)
@@ -75,21 +81,22 @@ class Main (object):
 
         # creation des trainFile et testFile
         log.debug("Construction des fichiers d'entrainement")
-        tools.constructLfwNamesCurrent( self.nbExemples )
+        tools.constructLfwNamesCurrent( self.nbExemples )   
+
         #TODO ca ne sert plus a rien finalement
-        ( nbClassesLFW, nbClassesORL ) = tools.trainAndTestConstruction( self.nbExemples )
+        ( nbClassesLFW, nbClassesORL ) = tools.trainAndTestConstruction( self.pourcentageTrain, self.nbExemples )
 
         # Chargement des données
         dataTrain, dataTrainIndices, nClass = tools.loadImageData( "train", self.categorie)
         
         # tranformation pca
-        log.info("Calcul des vecteurs propres.")
+        print_output("Calcul des vecteurs propres...")
         pca_model = PCA( dataTrain )
         pca_model.transform() # on transforme les donné dans un le "eigen space"
 
         ##### Recherche pas KNN
         if algo == "KNN":
-            log.info("Début de l'algorithme des K plus proches voisins.")
+            print_output("Début de l'algorithme des K plus proches voisins...")
             
             # On build le model pour recherche par KNN
             knn_model = KNN( pca_model.getWeightsVectors(), dataTrainIndices, nClass, self.K )
@@ -100,64 +107,69 @@ class Main (object):
             ## TEST ###########################
             #TODO Toute cette partie est a revoir pour sortir des graphes
             # de train, validation, test
-            dataTest, dataTestIndices = tools.loadImageData( "test", self.categorie )
+            for trainTest in ["train", "test"]:
+                dataTest, dataTestIndices, nClass = tools.loadImageData( trainTest, self.categorie )
 
             # compteurs de bons résultats   
-            nbGoodResult = 0
-            nbGoodResult2 = 0 
-            nbGoodResult3 = 0
+                nbGoodResult = 0
+                nbGoodResult2 = 0 
+                nbGoodResult3 = 0
 
-            for i in range(0, int( dataTest.shape[1] )):
+                for i in range(0, int( dataTest.shape[1] )):
                 #TODO faire ne projection matriciel
-                proj = pca_model.getProjection( dataTest[:,i] )
+                    proj = pca_model.getProjection( dataTest[:,i] )
 
                 # k = 1, pour réference
                 # on force k
-                knn_model.setK( 1 )
-                result1NN = knn_model.compute_predictions( proj )
-                if(result1NN == dataTestIndices[i]):
-                    nbGoodResult += 1
+                    knn_model.setK( 1 )
+                    result1NN = knn_model.compute_predictions( proj )
+                    if(result1NN == dataTestIndices[i]):
+                        nbGoodResult += 1
 
                 # k = n
                 # replace k a ca position initial
-                knn_model.setK( self.K )
-                resultKNN = knn_model.compute_predictions( proj )
-                if(resultKNN == dataTestIndices[i]):
-                    nbGoodResult2 += 1
+                    knn_model.setK( self.K )
+                    resultKNN = knn_model.compute_predictions( proj )
+                    if(resultKNN == dataTestIndices[i]):
+                        nbGoodResult2 += 1
 
-                #
-                resultParzen = parzen_model.compute_predictions( proj )
-                if(resultParzen == dataTestIndices[i]):
-                    nbGoodResult3 += 1
+                
+                    resultParzen = parzen_model.compute_predictions( proj )
+                    if(resultParzen == dataTestIndices[i]):
+                        nbGoodResult3 += 1
 
-                out_str = "Classic method: "+ str( result1NN ) +" | KNN method: "+ str( resultKNN ) +" | KNN+Parzen method: "+ str( resultParzen ) +" | Expected: "+ str( dataTestIndices[i] ) +"\n" # +1 car l'index de la matrice commence a 0
-                print_output(out_str)
+                    out_str = "Classic method: "+ str( result1NN ) +" | KNN method: "+ str( resultKNN ) +" | KNN+Parzen method: "+ str( resultParzen ) +" | Expected: "+ str( dataTestIndices[i] ) +"\n" # +1 car l'index de la matrice commence a 0
+                    print_output(out_str)
 
-            res = (float(nbGoodResult) / float(dataTest.shape[1])) * 100.
-            out_str = "\nAccuracy with classic method: %.3f" % res + "%\n"
-            res = (nbGoodResult2 / float(dataTest.shape[1])) * 100.
-            out_str += "Accuracy with KNN method (k="+ str( self.K ) +"): %.3f" % res + "%\n"
-            res = (nbGoodResult3 / float(dataTest.shape[1])) * 100.
-            out_str += "Accuracy with KNN + Parzen window method (theta="+ str( self.Theta ) +"): %.3f" % res + "%\n"
-            print_output(out_str)
-
-            ### Resultats
-            listeRes.append(res)
+                    resClassic = (float(nbGoodResult) / float(dataTest.shape[1])) * 100.
+                    out_str = "\nAccuracy with classic method: %.3f" % resClassic + "%\n"
+                    resKNN = (nbGoodResult2 / float(dataTest.shape[1])) * 100.
+                    out_str += "Accuracy with KNN method (k="+ str( self.K ) +"): %.3f" % resKNN + "%\n"
+                    res = (nbGoodResult3 / float(dataTest.shape[1])) * 100.
+                    out_str += "Accuracy with KNN + Parzen window method (theta="+ str( self.Theta ) +"): %.3f" % res + "%\n"
+                    print_output(out_str)
+            
+            #### recupere les valeurs finale de l'accuracy
+                listeRes.append( resClassic )
+                listeRes.append( resKNN )
+                listeRes.append( res )
+            
 
             #### Stockage
-            if self.stock == 1 :
-                fichier = open("curvAccuracyKnn"+self.categorie,"a")
-                fichier.write(str(self.nbExemples)+" "+str(res)+" "+str(self.K)+"\n")
-                fichier.close()
+                if self.stock == 1 :
+                    fichier = open("curvAccuracyKnn"+self.categorie,"a")
+                    fichier.write(str(self.nbExemples)+" "+str(res)+" "+str(self.K)+"\n")
+                    fichier.close()
         
         #### Recherche pas NNET
         elif algo == "NNET":
-			log.info("Début de l'algorithme du Perceptron multicouche.")
+			print_output("Début de l'algorithme du Perceptron multicouche...")
 			
 			# parametre, donnees, etc...
 			dataTrain = pca_model.getWeightsVectors()
 			dataTrainTargets = (dataTrainIndices - 1).reshape(dataTrainIndices.shape[0], -1)
-			train_set = np.concatenate((dataTrain, dataTrainTargets), axis=1)
+			#! contrairement au KNN le NNET prends les vecteurs de features en ligne et non pas en colonne
+			train_set = np.concatenate((dataTrain.T, dataTrainTargets), axis=1)
 
 			# On build et on entraine le model pour recherche par KNN
 			nnet_model = NeuralNetwork( dataTrain.shape[0], self.n_hidden, nClass, self.lr, self.wd )
@@ -167,7 +179,6 @@ class Main (object):
 			#TODO Toute cette partie est a revoir pour sortir des graphes
 			# de train, validation, test
 			dataTest, dataTestIndices, nClass = tools.loadImageData( "test", self.categorie )
-
 			# compteurs de bons résultats   
 			nbGoodResult = 0
 
@@ -192,6 +203,7 @@ class Main (object):
                             fichier = open("curvAccuracy"+self.categorie,"a")
                             fichier.write(str(self.nbExemples)+" "+str(res)+"\n")
                             fichier.close()
+        return listeRes
 
 #### FIN CLASSE MAIN ####################################
 
@@ -220,9 +232,15 @@ if __name__ == "__main__":
 
     parser.add_argument("--nExamples", 
                       dest="nbExemples",
-                      help="Number of exemples per Classe for training",
+                      help="Number of exemples per Classe for the study",
                       type=int,  
-                      default=7)
+                      default=10)
+
+    parser.add_argument("--pTrain", 
+                      dest="pourcentageTrain",
+                      help="]0;1[, percent of training exemples",
+                      type=float,  
+                      default=0.5)
 
     parser.add_argument("--categorie", 
                       dest="categorie",
@@ -312,24 +330,54 @@ if __name__ == "__main__":
     nbExemples = args.nbExemples
     stock = args.stock
     curv = args.curv
+    pourcentageTrain = args.pourcentageTrain
 
     #### Début du programme
     if algo_type == "KNN":
         K = args.k
         Theta = args.theta
-        xVector = [ nbExemples ]
-        yVector = []
+        
+        #### initialisation des abscisses et ordonnees #
+        xVector = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
+        yVectorClassicTrain = []
+        yVectorClassicTest = []
+        yVectorKNNTrain = []
+        yVectorKNNTest = []
+        yVectorParzenTrain = []
+        yVectorParzenTest = []
+
+        #### construction main #
+        faceReco = Main( K=K, Theta=Theta, trainFile=trainFile, testFile=testFile, categorie=categorie, stock=stock, curv=curv, pourcentageTrain=pourcentageTrain, nbExemples=nbExemples, debug_mode=debug_mode)
         if curv == 1 :
-            if categorie == "ORL" :
-                tools.completion( xVector, 8)
-            elif categorie == "LFW" :
-                xVector = [ nbExemples ]
-                tools.completion( xVector, 10)
-        faceReco = Main( K=K, Theta=Theta, trainFile=trainFile, testFile=testFile, categorie=categorie, stock=stock, curv=curv, nbExemples=nbExemples, debug_mode=debug_mode)
-        for n in xVector:
-            faceReco.nbExemples = n
-            listeRes=faceReco.main( algo=algo_type )
-            yVector.append( listeRes )
+            indice = 0
+
+            #### construction ordonnees et recuperation res
+            for p in xVector:
+                faceReco.pourcentageTrain = p
+                listeRes = faceReco.main( algo=algo_type )
+                yVectorClassicTrain.append( listeRes[0] )
+                yVectorClassicTest.append( listeRes[3] )
+                yVectorKNNTrain.append( listeRes[1] )
+                yVectorKNNTest.append( listeRes[4] )
+                yVectorParzenTrain.append( listeRes[2] )
+                yVectorParzenTest.append( listeRes[5] )
+                xVector[indice] = np.max(( int(p * nbExemples), 1 ))
+                indice += 1
+
+            #### construction des conteneurs de nos 6 listes d'abscisses et ordonnees
+            x=[]
+            y=[]
+            for i in range(6):
+                x.append(xVector)         
+            y.append(yVectorClassicTrain)
+            y.append(yVectorClassicTest)
+            y.append(yVectorKNNTrain)
+            y.append(yVectorKNNTest)
+            y.append(yVectorParzenTrain)
+            y.append(yVectorParzenTest)
+            tools.drawCurves( x, y, ["g--", "g", "r--", "r", "b--", "b"], ["k=1 on train ", "k=1 on test", "k="+str(K)+" on train", "k="+str(K)+" on test", "Parzen theta="+str(Theta)+" on train", "Parzen theta="+str(Theta)+" on test"], title="Accuracy on Train/Test with "+categorie, xlabel="Examples p. class", ylabel="Accuracy")
+        else : 
+            listeRes = faceReco.main( algo=algo_type )
         
     
     elif algo_type == "NNET":

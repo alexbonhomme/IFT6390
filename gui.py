@@ -6,6 +6,7 @@ from threading import Thread
 import pygtk
 pygtk.require('2.0')
 import gtk
+gtk.gdk.threads_init()
 
 import sys
 import logging as log
@@ -14,7 +15,11 @@ class Gui:
 
     def __init__(self, debug_mode=False):
     
-        self.GUI_VERSION = "0.1"
+        self.GUI_VERSION = "0.2"
+    	
+    	# Ensemble de données
+    	self.dataSet = "ORL"
+    	self.nExamples = 8
     
         # Parametre pour execution du programme principal
         self.algoType = "kppv" # Par défaut
@@ -33,6 +38,8 @@ class Gui:
         # On construit la fenetre principale
         self.buildDisplay()
         
+       	self.mainThread = None
+        
         #debug
         # logger pour debbug
         self.debug_mode = debug_mode
@@ -43,210 +50,247 @@ class Gui:
 
     # Contruction de l'interface
     def buildDisplay(self):
-        # Fenetre principale
-        self.mainWindow = gtk.Window(gtk.WINDOW_TOPLEVEL)
-        self.mainWindow.set_title("Reconnaissance facial GUI - v" + self.GUI_VERSION)
+		# Fenetre principale
+		self.mainWindow = gtk.Window(gtk.WINDOW_TOPLEVEL)
+		self.mainWindow.set_title("Reconnaissance facial GUI - v" + self.GUI_VERSION)
 
-        # Signal de fermeture (croix, fermer, etc..)
-        self.mainWindow.connect("destroy", lambda wid: gtk.main_quit())
-        self.mainWindow.connect("delete_event", lambda a1,a2: gtk.main_quit())
+		# Signal de fermeture (croix, fermer, etc..)
+		self.mainWindow.connect("destroy", lambda wid: gtk.main_quit())
+		self.mainWindow.connect("delete_event", lambda a1,a2: gtk.main_quit())
 
-        # box principale
-        main_box = gtk.VBox(True, 0)
-        main_box.set_border_width(10)
-        main_box.show()
+		# box principale
+		main_box = gtk.Table(4, 1, False)
+		main_box.set_border_width(10)
+		main_box.show()
 
-        # menu de selection des algo 
-        lab_menu1 = gtk.Label("Algorithme a utiliser :")
-        #lab_menu1.set_alignment(0, 0)
-        lab_menu1.show()
-        
-        menu1 = gtk.OptionMenu()
-        menu_content = gtk.Menu()
-        
-        # entrées du menu
-        item = gtk.MenuItem("K-PPV")
-        item.connect("activate", self.updateAlgoType, "kppv")
-        item.show()
-        menu_content.append(item)
-        
-        item = gtk.MenuItem("Réseau de neurones")
-        item.connect("activate", self.updateAlgoType, "nnet")
-        item.show()
-        menu_content.append(item)
-        menu1.set_menu(menu_content)
-        menu1.show()
-        
-        box_select = gtk.VBox(True, 0)
-        box_select.show()
-        frame_0 = gtk.Frame("")
-        frame_0.add(box_select)
-        frame_0.show()
-        main_box.pack_start(frame_0, True, True, 10)
-        
-        box1 = gtk.HBox(True, 0)
-        box1.pack_start(lab_menu1, True, True, 5)
-        box1.pack_start(menu1, False, False, 5)
-        box1.show()
-        box_select.pack_start(box1, False, False, 10)
-        
-        # Cette box contient troutes les box de parametre (kppv, nnet, etc..)
-        # mais certaines sont masquées
-        box_param = gtk.VBox(True, 0)
-        box_param.show()
-        frame_1 = gtk.Frame("Paramètres")
-        frame_1.add(box_param)
-        frame_1.show()
-        main_box.pack_start(frame_1, True, True, 10)
+		box_select = gtk.VBox(True, 0)
+		box_select.show()
+		frame_0 = gtk.Frame("Général")
+		frame_0.add(box_select)
+		frame_0.show()
+		main_box.attach(frame_0, 0, 1, 0, 1)
+		box1 = gtk.Table(3, 1, True)
+		box1.show()
+		box_select.pack_start(box1, False, False, 10)
 
-        # Box nnet
-        self.box_nnet = gtk.VBox(True, 0)
-        box_h1 = gtk.HBox(True, 0)
-        lab_1 = gtk.Label("Nombre d'époques :")
-        lab_1.set_justify(gtk.JUSTIFY_LEFT)
-        lab_1.show()
-        ajt_k = gtk.Adjustment(self.n_epoch, 1.0, 100000.0, 1.0, 5.0, 0.0)
-        box_incr = gtk.SpinButton(ajt_k, 0, 0)
-        box_incr.set_numeric(True)
-        box_incr.set_wrap(False)
-        box_incr.set_snap_to_ticks(True)
-        box_incr.connect("value-changed", self.updateParam, "Epoch_value")
-        box_incr.show()
-        box_h1.pack_start(lab_1, True, True, 5)
-        box_h1.pack_start(box_incr, True, True, 5)
-        
-        lab_1 = gtk.Label("Nombre de neurones :")
-        lab_1.set_justify(gtk.JUSTIFY_LEFT)
-        lab_1.show()
-        ajt_k = gtk.Adjustment(self.n_hidden, 1.0, 10000.0, 1.0, 5.0, 0.0)
-        box_incr = gtk.SpinButton(ajt_k, 0, 0)
-        box_incr.set_numeric(True)
-        box_incr.set_wrap(False)
-        box_incr.set_snap_to_ticks(True)
-        box_incr.connect("value-changed", self.updateParam, "Hid_value")
-        box_incr.show()
-        box_h1.pack_start(lab_1, True, True, 5)
-        box_h1.pack_start(box_incr, True, True, 5)
-        
-        lab_1 = gtk.Label("Taille du batch :")
-        lab_1.set_justify(gtk.JUSTIFY_LEFT)
-        lab_1.show()
-        ajt_k = gtk.Adjustment(self.batch_size, 1.0, 100000., 1.0, 5.0, 0.0)
-        box_incr = gtk.SpinButton(ajt_k, 0, 0)
-        box_incr.set_numeric(True)
-        box_incr.set_wrap(False)
-        box_incr.set_snap_to_ticks(True)
-        box_incr.connect("value-changed", self.updateParam, "Batch_value")
-        box_incr.show()
-        box_h1.pack_start(lab_1, True, True, 5)
-        box_h1.pack_start(box_incr, True, True, 5)
-        box_h1.show()
+		# nombre d'exemples
+		lab_menu1 = gtk.Label("Nombre d'exemple (train+test) par sujet :")
+		lab_menu1.show()
 
-        self.box_nnet.pack_start(box_h1, True, True, 5)
-        
-        box_h1 = gtk.HBox(True, 0)
-        lab_1 = gtk.Label("Taux d'apprentissage :")
-        lab_1.set_justify(gtk.JUSTIFY_LEFT)
-        lab_1.show()
-        ajt_k = gtk.Adjustment(self.lr, 0.0, 1.0, 0.001, 0.01, 0.0)
-        box_incr = gtk.SpinButton(ajt_k, 0, 0)
-        box_incr.set_digits(5)
-        box_incr.set_numeric(True)
-        box_incr.set_wrap(False)
-        box_incr.set_snap_to_ticks(True)
-        box_incr.connect("value-changed", self.updateParam, "Lr_value")
-        box_incr.show()
-        box_h1.pack_start(lab_1, True, True, 5)
-        box_h1.pack_start(box_incr, True, True, 5)
-        
-        lab_1 = gtk.Label("Pénalité L2 :")
-        lab_1.set_justify(gtk.JUSTIFY_LEFT)
-        lab_1.show()
-        ajt_k = gtk.Adjustment(self.wd, 0.0, 1.0, 0.001, 0.01, 0.0)
-        box_incr = gtk.SpinButton(ajt_k, 0, 0)
-        box_incr.set_digits(5)
-        box_incr.set_numeric(True)
-        box_incr.set_wrap(False)
-        box_incr.set_snap_to_ticks(True)
-        box_incr.connect("value-changed", self.updateParam, "Wd_value")
-        box_incr.show()
-        box_h1.pack_start(lab_1, True, True, 5)
-        box_h1.pack_start(box_incr, True, True, 5)
-        box_h1.show()
-        
-        self.box_nnet.pack_start(box_h1, True, True, 5)
-        box_param.pack_start(self.box_nnet, True, True, 5)
-        
-        # Box kppv
-        self.box_kppv = gtk.HBox(True, 0)
-        lab_1 = gtk.Label("Nombre de voisins a consulter :")
-        lab_1.set_justify(gtk.JUSTIFY_LEFT)
-        lab_1.show()
-        
-        ajt_k = gtk.Adjustment(self.K, 1.0, 999.0, 1.0, 5.0, 0.0)
-        box_incr = gtk.SpinButton(ajt_k, 0, 0)
-        box_incr.set_numeric(True)
-        box_incr.set_wrap(False)
-        box_incr.set_snap_to_ticks(True)
-        box_incr.connect("value-changed", self.updateParam, "K_value")
-        box_incr.show()
-        
-        self.box_kppv.pack_start(lab_1, True, True, 5)
-        self.box_kppv.pack_start(box_incr, True, True, 5)
-        
-        lab_1 = gtk.Label("Ecart type (Parzen) :")
-        lab_1.set_justify(gtk.JUSTIFY_LEFT)
-        lab_1.show()
-        
-        ajt_k = gtk.Adjustment(self.Theta, 0.0, 1.0, 0.01, 0.10, 0.0)
-        box_incr = gtk.SpinButton(ajt_k, 0, 0)
-        box_incr.set_digits(3)
-        box_incr.set_numeric(True)
-        box_incr.set_wrap(False)
-        box_incr.set_snap_to_ticks(True)
-        box_incr.connect("value-changed", self.updateParam, "Theta_value")
-        box_incr.show()
-        
-        self.box_kppv.pack_start(lab_1, True, True, 5)
-        self.box_kppv.pack_start(box_incr, True, True, 5)
-        
-        box_param.pack_start(self.box_kppv, True, True, 5)
-        self.box_kppv.show()
-        
-        # output
-        box2 = gtk.HBox(True, 0)
-        box2.show()
-        frame_2 = gtk.Frame("Output")
-        frame_2.add(box2)
-        frame_2.show()
-        main_box.pack_start(frame_2, True, True, 10)
-        
+		ajt_k = gtk.Adjustment(self.nExamples, 1.0, 1000.0, 1.0, 5.0, 0.0)
+		box_incr = gtk.SpinButton(ajt_k, 0, 0)
+		box_incr.set_numeric(True)
+		box_incr.set_wrap(False)
+		box_incr.set_snap_to_ticks(True)
+		box_incr.connect("value-changed", self.updateParam, "NbExamples_value")
+		box_incr.show()
 
-        scroll_win = gtk.ScrolledWindow()
-        scroll_win.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
-        scroll_win.set_size_request(1000, 100)
-        self.textview = gtk.TextView()
-        self.textview.set_editable(False)
-        self.textview.show()
-        scroll_win.add(self.textview)
-        scroll_win.show()
-        box2.pack_start(scroll_win, False, False, 5)
-        
-        # Bottom frame
-        self.bt_run = gtk.Button("Exécuter l'algorithme", gtk.STOCK_EXECUTE)
-        self.bt_run.connect("clicked", self.run, None)
-        self.bt_run.set_flags(gtk.CAN_DEFAULT)
-        
-        self.bt_run.show()
-        box3 = gtk.HBox(True, 0)
-        box3.pack_start(self.bt_run, True, True, 0)
-        box3.show()
-        main_box.pack_start(box3, True, True, 0)
+		box1.attach(lab_menu1, 0, 1, 0, 1)
+		box1.attach(box_incr, 1, 2, 0, 1)
+		###
 
-        # Placement dans la fenetre principale
-        self.mainWindow.add(main_box)
-        self.bt_run.grab_default()  #Focus sur le bt par default
-        self.mainWindow.show()
+		# menu de selection des donnée 
+		lab_menu1 = gtk.Label("Ensemble de données à utiliser :")
+		lab_menu1.show()
+		menu1 = gtk.OptionMenu()
+		menu_content = gtk.Menu()
+
+		# entrées du menu
+		item = gtk.MenuItem("ORL")
+		item.connect("activate", self.updateDataSet, "orl")
+		item.show()
+		menu_content.append(item)
+
+		item = gtk.MenuItem("LFW")
+		item.connect("activate", self.updateDataSet, "lfw")
+		item.show()
+		menu_content.append(item)
+		menu1.set_menu(menu_content)
+		menu1.show()
+
+		box1.attach(lab_menu1, 0, 1, 1, 2)
+		box1.attach(menu1, 1, 2, 1, 2)
+		###
+
+		# menu de selection des algo 
+		lab_menu1 = gtk.Label("Algorithme a utiliser :")
+		lab_menu1.show()
+		menu1 = gtk.OptionMenu()
+		menu_content = gtk.Menu()
+
+		# entrées du menu
+		item = gtk.MenuItem("K-PPV")
+		item.connect("activate", self.updateAlgoType, "kppv")
+		item.show()
+		menu_content.append(item)
+
+		item = gtk.MenuItem("Réseau de neurones")
+		item.connect("activate", self.updateAlgoType, "nnet")
+		item.show()
+		menu_content.append(item)
+		menu1.set_menu(menu_content)
+		menu1.show()        
+
+		box1.attach(lab_menu1, 0, 1, 2, 3)
+		box1.attach(menu1, 1, 2, 2, 3)	
+		###
+
+		# Cette box contient troutes les box de parametre (kppv, nnet, etc..)
+		# mais certaines sont masquées
+		box_param = gtk.VBox(True, 0)
+		box_param.show()
+		frame_1 = gtk.Frame("Paramètres")
+		frame_1.add(box_param)
+		frame_1.show()
+		main_box.attach(frame_1, 0, 1, 1, 2)
+
+		# Box nnet
+		self.box_nnet = gtk.Table(2, 6, True)
+		
+		lab_1 = gtk.Label("Nombre d'époques :")
+		lab_1.set_justify(gtk.JUSTIFY_LEFT)
+		lab_1.show()
+		ajt_k = gtk.Adjustment(self.n_epoch, 1.0, 100000.0, 1.0, 5.0, 0.0)
+		box_incr = gtk.SpinButton(ajt_k, 0, 0)
+		box_incr.set_numeric(True)
+		box_incr.set_wrap(False)
+		box_incr.set_snap_to_ticks(True)
+		box_incr.connect("value-changed", self.updateParam, "Epoch_value")
+		box_incr.show()
+		self.box_nnet.attach(lab_1, 0, 1, 0, 1)
+		self.box_nnet.attach(box_incr, 1, 2, 0, 1)
+
+		lab_1 = gtk.Label("Nombre de neurones :")
+		lab_1.set_justify(gtk.JUSTIFY_LEFT)
+		lab_1.show()
+		ajt_k = gtk.Adjustment(self.n_hidden, 1.0, 10000.0, 1.0, 5.0, 0.0)
+		box_incr = gtk.SpinButton(ajt_k, 0, 0)
+		box_incr.set_numeric(True)
+		box_incr.set_wrap(False)
+		box_incr.set_snap_to_ticks(True)
+		box_incr.connect("value-changed", self.updateParam, "Hid_value")
+		box_incr.show()
+		self.box_nnet.attach(lab_1, 2, 3, 0, 1)
+		self.box_nnet.attach(box_incr, 3, 4, 0, 1)
+
+		lab_1 = gtk.Label("Taille du batch :")
+		lab_1.set_justify(gtk.JUSTIFY_LEFT)
+		lab_1.show()
+		ajt_k = gtk.Adjustment(self.batch_size, 1.0, 100000., 1.0, 5.0, 0.0)
+		box_incr = gtk.SpinButton(ajt_k, 0, 0)
+		box_incr.set_numeric(True)
+		box_incr.set_wrap(False)
+		box_incr.set_snap_to_ticks(True)
+		box_incr.connect("value-changed", self.updateParam, "Batch_value")
+		box_incr.show()
+		self.box_nnet.attach(lab_1, 4, 5, 0, 1)
+		self.box_nnet.attach(box_incr, 5, 6, 0, 1)		
+
+		
+		lab_1 = gtk.Label("Taux d'apprentissage :")
+		lab_1.set_justify(gtk.JUSTIFY_LEFT)
+		lab_1.show()
+		ajt_k = gtk.Adjustment(self.lr, 0.0, 1.0, 0.001, 0.01, 0.0)
+		box_incr = gtk.SpinButton(ajt_k, 0, 0)
+		box_incr.set_digits(5)
+		box_incr.set_numeric(True)
+		box_incr.set_wrap(False)
+		box_incr.set_snap_to_ticks(True)
+		box_incr.connect("value-changed", self.updateParam, "Lr_value")
+		box_incr.show()
+		self.box_nnet.attach(lab_1, 0, 1, 1, 2)
+		self.box_nnet.attach(box_incr, 1, 2, 1, 2)
+
+		lab_1 = gtk.Label("Pénalité L2 :")
+		lab_1.set_justify(gtk.JUSTIFY_LEFT)
+		lab_1.show()
+		ajt_k = gtk.Adjustment(self.wd, 0.0, 1.0, 0.001, 0.01, 0.0)
+		box_incr = gtk.SpinButton(ajt_k, 0, 0)
+		box_incr.set_digits(5)
+		box_incr.set_numeric(True)
+		box_incr.set_wrap(False)
+		box_incr.set_snap_to_ticks(True)
+		box_incr.connect("value-changed", self.updateParam, "Wd_value")
+		box_incr.show()
+		self.box_nnet.attach(lab_1, 2, 3, 1, 2)
+		self.box_nnet.attach(box_incr, 3, 4, 1 ,2)
+
+		box_param.pack_start(self.box_nnet, True, True, 5)
+
+		# Box kppv
+		self.box_kppv = gtk.Table(2, 2, True)
+		box_param.pack_start(self.box_kppv, True, True, 5)
+		self.box_kppv.show()
+		
+		lab_1 = gtk.Label("Nombre de voisins a consulter :")
+		lab_1.set_justify(gtk.JUSTIFY_LEFT)
+		lab_1.show()
+
+		ajt_k = gtk.Adjustment(self.K, 1.0, 999.0, 1.0, 5.0, 0.0)
+		box_incr = gtk.SpinButton(ajt_k, 0, 0)
+		box_incr.set_numeric(True)
+		box_incr.set_wrap(False)
+		box_incr.set_snap_to_ticks(True)
+		box_incr.connect("value-changed", self.updateParam, "K_value")
+		box_incr.show()
+
+		self.box_kppv.attach(lab_1, 0, 1, 0, 1)
+		self.box_kppv.attach(box_incr, 1, 2, 0, 1)
+
+		lab_1 = gtk.Label("Ecart type (Parzen) :")
+		lab_1.set_justify(gtk.JUSTIFY_LEFT)
+		lab_1.show()
+
+		ajt_k = gtk.Adjustment(self.Theta, 0.0, 1.0, 0.01, 0.10, 0.0)
+		box_incr = gtk.SpinButton(ajt_k, 0, 0)
+		box_incr.set_digits(3)
+		box_incr.set_numeric(True)
+		box_incr.set_wrap(False)
+		box_incr.set_snap_to_ticks(True)
+		box_incr.connect("value-changed", self.updateParam, "Theta_value")
+		box_incr.show()
+
+		self.box_kppv.attach(lab_1, 0, 1, 1, 2)
+		self.box_kppv.attach(box_incr, 1, 2, 1, 2)
+
+		# output
+		box2 = gtk.HBox(True, 0)
+		box2.show()
+		frame_2 = gtk.Frame("Output")
+		frame_2.add(box2)
+		frame_2.show()
+		main_box.attach(frame_2, 0, 1, 2, 3)
+
+		scroll_win = gtk.ScrolledWindow()
+		scroll_win.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
+		scroll_win.set_size_request(1000, 200)
+		self.textview = gtk.TextView()
+		self.textview.set_editable(False)
+		self.textview.show()
+		scroll_win.add(self.textview)
+		scroll_win.show()
+		box2.pack_start(scroll_win, True, True, 5)
+
+		# Bottom frame
+		box3 = gtk.Table(1, 2, True)
+		box3.show()
+		main_box.attach(box3, 0, 1, 3, 4)
+		
+		self.bt_run = gtk.Button("Exécuter l'algorithme", gtk.STOCK_EXECUTE)
+		self.bt_run.connect("clicked", self.run, None)
+		self.bt_run.set_flags(gtk.CAN_DEFAULT)
+		self.bt_run.show()
+		box3.attach(self.bt_run, 1, 2, 0, 1)
+		
+		bt_quit = gtk.Button("Quitter")
+		bt_quit.connect("clicked", lambda wid: gtk.main_quit())
+		bt_quit.show()
+		box3.attach(bt_quit, 0, 1, 0, 1)
+
+		# Placement dans la fenetre principale
+		self.mainWindow.add(main_box)
+		self.bt_run.grab_default()  #Focus sur le bt par default
+		self.mainWindow.show()
 
     # Main loop
     def main(self):
@@ -255,38 +299,47 @@ class Gui:
     
     # Callback functions
     def run(self, widget, data):
-        # on desactive le bt durant le script
-        self.bt_run.set_sensitive(False)
+    	buf = self.textview.get_buffer()
+        buf.insert_at_cursor("Début de l'algorithme ! (BUG: Ne pas réappuyer sur le bouton 'Executer')\n")
+        self.textview.scroll_mark_onscreen(buf.get_insert())
+    
+        #TODO on desactive le bt durant le script
+        #self.bt_run.set_sensitive(False)
     
         # Execution de l'algo avec kppv
         if self.algoType == "kppv":
                     
-            log.info("> Run K-PPV with" + str(self.K) + "neigbours...\n")
+            log.info("Run K-PPV with " + str(self.K) + " neigbours...\n")
             
-            faceReco = MainConsole.Main( K=self.K, Theta=self.Theta, debug_mode=self.debug_mode )
-            # On thread l'app pour le ne pas figer le gui
-            t = Thread(target=faceReco.main, args=("KNN", self.textview))
-            t.start()# On demarre le thread
-            t.join() # On attends la fin du thread
-            
-            log.info("> Ending")
+            faceReco = MainConsole.Main( categorie=self.dataSet, nbExemples=self.nExamples,
+            							 K=self.K, Theta=self.Theta, debug_mode=self.debug_mode )
+            if faceReco != None:
+		        # On thread l'app pour le ne pas figer le gui
+		        Thread(target=faceReco.main, args=("KNN", self.textview)).start()
+
             
         # Execution de l'algo avec reseau de neurones    
         elif self.algoType == "nnet":
         
-            log.info("> Run NNET with \n")
+            log.info("Run NNET \n")
             
-            faceReco = MainConsole.Main( n_epoch=self.n_epoch, n_hidden=self.n_hidden, batch_size=self.batch_size,
+            faceReco = MainConsole.Main( categorie=self.dataSet, nbExemples=self.nExamples,
+            							 n_epoch=self.n_epoch, n_hidden=self.n_hidden, batch_size=self.batch_size,
                                          lr=self.lr, wd=self.wd, debug_mode=self.debug_mode )
             # On thread l'app pour le ne pas figer le gui
-            t = Thread(target=faceReco.main, args=("NNET", self.textview))
-            t.start()# On demarre le thread
-            t.join() # On attends la fin du thread
+            Thread(target=faceReco.main, args=("NNET", self.textview)).start()
             
-            log.info("> Ending")
         
         # reactivaton du bt
-        self.bt_run.set_sensitive(True)
+        #self.bt_run.set_sensitive(True)
+    
+    def updateDataSet(self, widget, dataSet):
+        self.dataSet = dataSet
+        
+        if dataSet == "lfw":
+            self.dataSet = "LFW"
+        else:
+            self.dataSet = "ORL" # par défaut orl
     
     def updateAlgoType(self, widget, algoType):
         self.algoType = algoType
@@ -299,6 +352,10 @@ class Gui:
             self.box_nnet.show()
     
     def updateParam(self, widget, data):
+    	# General
+    	if data == "NbExamples_value":
+    		self.nExamples = widget.get_value_as_int()
+    
         # KNN
         if data == "K_value":
             self.K = widget.get_value_as_int()
