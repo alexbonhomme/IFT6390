@@ -34,6 +34,7 @@ class Main (object):
         self.lr = lr
         self.wd = wd
         
+
         # categorie  ("LFW", "ORL", "BOTH"), nbExemples
         self.categorie = categorie
         self.nbExemples = nbExemples
@@ -70,7 +71,7 @@ class Main (object):
         def print_output(text):
             if textview != None:
                 buf = textview.get_buffer()
-                buf.insert_at_cursor(text)
+                buf.insert_at_cursor(text + "\n")
                 textview.scroll_mark_onscreen(buf.get_insert())
             else:
                 log.info(text)
@@ -89,13 +90,13 @@ class Main (object):
         dataTrain, dataTrainIndices, nClass = tools.loadImageData( "train", self.categorie)
         
         # tranformation pca
-        log.info("Calcul des vecteurs propres.")
+        print_output("Calcul des vecteurs propres...")
         pca_model = PCA( dataTrain )
         pca_model.transform() # on transforme les donné dans un le "eigen space"
 
         ##### Recherche pas KNN
         if algo == "KNN":
-            log.info("Début de l'algorithme des K plus proches voisins.")
+            print_output("Début de l'algorithme des K plus proches voisins...")
             
             # On build le model pour recherche par KNN
             knn_model = KNN( pca_model.getWeightsVectors(), dataTrainIndices, nClass, self.K )
@@ -158,7 +159,7 @@ class Main (object):
         
         #### Recherche pas NNET
         elif algo == "NNET":
-			log.info("Début de l'algorithme du Perceptron multicouche.")
+			print_output("Début de l'algorithme du Perceptron multicouche...")
 			
 			# parametre, donnees, etc...
 			dataTrain = pca_model.getWeightsVectors()
