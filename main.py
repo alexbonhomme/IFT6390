@@ -20,7 +20,7 @@ class Main (object):
 
     def __init__(self, K=1, Theta=0.5, 
                  batch_size=1, n_epoch=100, n_hidden=10, lr=0.001, wd=0.,
-                 trainFile="", testFile="", debug_mode=True, categorie="ORL", nbExemples=5, stock=0, curv=0):
+                 trainFile="", testFile="", debug_mode=True, categorie="ORL", nbExemples=5, stock=0, curv=0, pourcentageTrain=0.5):
         # KNN
         self.K = K
         
@@ -34,29 +34,28 @@ class Main (object):
         self.lr = lr
         self.wd = wd
         
-        # categorie  ("LFW", "ORL", "BOTH")
-        self.categorie=categorie
-        self.nbExemples=nbExemples
-        if self.categorie not in ["LFW","ORL"]:
-            log.error("La  categorie d'images étudiées doit être LFW ou ORL")
-        if self.nbExemples<0:
-<<<<<<< HEAD
-             log.error("Le nombre d'exemples envisagés doit être positif")
-        if self.nbExemples>=400 and self.categorie=="LFW":
-            log.error("Le nombre d'entrees de l'ensemble d'entrainement doit etre constitue de moins de 400 exemples par classes pour le domaine LFW")
-=======
-            log.error("Le nombre d'exemples envisagés doit être positif")
->>>>>>> 7f73815da471d26e2f940b0bed70b2ae0aa2b1a6
-        if self.nbExemples>=10 and self.categorie=="ORL":
-            log.error("Le nombre d'entrees de l'ensemble d'entrainement doit etre constitue de moins de 10 exemples par classes pour le domaine ORL")
+        # categorie  ("LFW", "ORL", "BOTH"), nbExemples
+        self.categorie = categorie
+        self.nbExemples = nbExemples
+        if self.categorie not in ["LFW", "ORL"]:
+            log.error("La  categorie d'images étudiees doit être LFW ou ORL")
+        if self.nbExemples<2:
+             log.error("Le nombre d'exemples envisages doit >= 2")
+        #if self.nbExemples>=400 and self.categorie=="LFW":
+            #log.error("Le nombre d'entrees de l'ensemble d'entrainement doit etre constitue de moins de 400 exemples par classes pour le domaine LFW")
+        if self.nbExemples>10 and self.categorie == "ORL":
+            log.error("Le nombre d'entrees pour l'etude doit etre constitue de moins de 10 exemples par classes pour le domaine ORL")
+        self.pourcentageTrain = pourcentageTrain
+        if self.pourcentageTrain >= 1.0 or self.pourcentageTrain <= 0 :
+            log.error("Le pourcentage doit etre dans ]0;1[")
 
         # stock & courbes
-        self.stock=stock
+        self.stock = stock
         if self.stock not in [0,1]:
-            self.stock=0
-        self.curv=curv
+            self.stock = 0
+        self.curv = curv
         if self.curv not in [0,1]:
-            self.curv=0
+            self.curv = 0
 
         # logger pour debbug
         if debug_mode:
@@ -81,10 +80,10 @@ class Main (object):
 
         # creation des trainFile et testFile
         log.debug("Construction des fichiers d'entrainement")
-        tools.constructLfwNamesCurrent( self.nbExemples + 2 )   # +2 car on envisage un minimum de 2 exemples test
+        tools.constructLfwNamesCurrent( self.nbExemples )   
 
         #TODO ca ne sert plus a rien finalement
-        ( nbClassesLFW, nbClassesORL ) = tools.trainAndTestConstruction( self.nbExemples )
+        ( nbClassesLFW, nbClassesORL ) = tools.trainAndTestConstruction( self.pourcentageTrain, self.nbExemples )
 
         # Chargement des données
         dataTrain, dataTrainIndices, nClass = tools.loadImageData( "train", self.categorie)
@@ -229,9 +228,15 @@ if __name__ == "__main__":
 
     parser.add_argument("--nExamples", 
                       dest="nbExemples",
-                      help="Number of exemples per Classe for training",
+                      help="Number of exemples per Classe for the study",
                       type=int,  
-                      default=7)
+                      default=10)
+
+    parser.add_argument("--pTrain", 
+                      dest="pourcentageTrain",
+                      help="]0;1[, percent of training exemples",
+                      type=float,  
+                      default=0.5)
 
     parser.add_argument("--categorie", 
                       dest="categorie",
@@ -321,28 +326,30 @@ if __name__ == "__main__":
     nbExemples = args.nbExemples
     stock = args.stock
     curv = args.curv
+    pourcentageTrain = args.pourcentageTrain
 
     #### Début du programme
     if algo_type == "KNN":
         K = args.k
         Theta = args.theta
-        xVector = [ nbExemples ]
+        xVector = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
         yVector = []
+        faceReco = Main( K=K, Theta=Theta, trainFile=trainFile, testFile=testFile, categorie=categorie, stock=stock, curv=curv, pourcentageTrain=pourcentageTrain, nbExemples=nbExemples, debug_mode=debug_mode)
         if curv == 1 :
-            if categorie == "ORL" :
-                xVector = [1,2,3]
-                #tools.completion( xVector, 8)
-            elif categorie == "LFW" :
-                xVector = [ nbExemples ]
-                tools.completion( xVector, 10)
-        faceReco = Main( K=K, Theta=Theta, trainFile=trainFile, testFile=testFile, categorie=categorie, stock=stock, curv=curv, nbExemples=nbExemples, debug_mode=debug_mode)
-        for n in xVector:
-            faceReco.nbExemples = n
+            indice = 0
+            for p in xVector:
+                faceReco.pourcentageTrain = p
+                listeRes = faceReco.main( algo=algo_type )
+                yVector.append( listeRes[0] )
+                xVector[indice] = np.max(( int(p * nbExemples), 1 ))
+                indice += 1
+            x=[]
+            y=[]
+            x.append(xVector)
+            y.append(yVector)
+            tools.drawCurves( x, y, ["g"], xlabel="Nbre ex. train par classe", ylabel="PrecisionTest")
+        else : 
             listeRes = faceReco.main( algo=algo_type )
-            yVector.append( listeRes[0] )
-        print(xVector)
-        print(yVector)
-        tools.drawCurves( xVector, yVector, "r+", xlabel="Nbre ex. train par classe", ylabel="Precision")
         
     
     elif algo_type == "NNET":

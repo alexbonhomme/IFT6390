@@ -77,9 +77,9 @@ def changeToGrey(filename):
 	img.save(filename)
 
 """
-        Recupere la liste des images de type precise ('lfw' ou 'orl')
+        Recupere la liste des images de type precise ('lfw' ou 'orl').
 """
-def listPictures(indiceSeparation, liste, type="Databases/LFW/lfw"):
+def listPictures(nbImagesTrain, nbImages, liste, type="Databases/LFW/lfw"):
 		import os, mimetypes, random
 		classesTrain = 0
 		classesTest = 0
@@ -90,13 +90,6 @@ def listPictures(indiceSeparation, liste, type="Databases/LFW/lfw"):
 		path = os.path.join( os.getcwd(), type)
 		finalTrain = []
 		finalTest = []
-		
-		if type == "Databases/LFW/lfw" :
-			borneMinTest = 2
-			borneMaxTest = 50
-		elif type ==  "Databases/orl_faces" : 
-			borneMinTest = 1
-			borneMaxTest = 9
 
 		for root, dirs, files in os.walk(path):
 			# get length of path
@@ -108,23 +101,23 @@ def listPictures(indiceSeparation, liste, type="Databases/LFW/lfw"):
 				ajoutTrain = 1
 				ajoutTest = 1
 				random.shuffle(files)
-				if len(files) >= ( indiceSeparation + borneMinTest ):
-					print(len(files))
-					print(root[count:])
+				if len(files) >=  nbImages :
+					#print(len(files))
+					#print(root[count:])
 					for f in files:
 						if int(with_extension) == 0:
 							f = f.split('.')[0]
-						if f != "README" and indiceSeparation == 0:
+						if f != "README" and nbImages == 0:
 							finalTrain.append(type+root[count:]+"/"+f)	
-						elif f != "README" and compteur < indiceSeparation and (root[count+1:] in liste or len(liste) == 0):
+						elif f != "README" and compteur < nbImagesTrain and (root[count+1:] in liste or len(liste) == 0):
 							if ajoutTrain == 1:
 								classesTrain += 1
 							exemplesTrain += 1
 							finalTrain.append(type+root[count:]+"/"+f)	
 							ajoutTrain = 0
 							compteur += 1
-						elif f != "README" and compteur >= indiceSeparation and (root[count+1:] in liste or len(liste) == 0):
-							if compteur < (indiceSeparation + borneMaxTest) :
+						elif f != "README" and compteur >= nbImagesTrain and (root[count+1:] in liste or len(liste) == 0):
+							if compteur < nbImages :
 								if ajoutTest == 1:
 									classesTest += 1
 								exemplesTest += 1
@@ -136,9 +129,9 @@ def listPictures(indiceSeparation, liste, type="Databases/LFW/lfw"):
 		return (finalTrain, finalTest, classesTrain, classesTest, exemplesTrain, exemplesTest)  
 
 """
-        Recupere la liste des dossiers de type LFW contenant au moins nbMaxImages+1 images, ainsi que le nombre d'images présentes
+        Recupere la liste des dossiers de type LFW contenant au exactement nbImages images
 """
-def constructLfwNamesCurrent(nbMaxImages):
+def constructLfwNamesCurrent(nbImages):
 		import os, mimetypes, random
 
 		path = os.path.join( os.getcwd(),"Databases/LFW/lfw")
@@ -152,8 +145,7 @@ def constructLfwNamesCurrent(nbMaxImages):
 			if(dirs):
 				dossier = dirs
 			if(files):
-				nbImages=0
-				if len(files) > nbMaxImages:
+				if len(files) >= nbImages:
 					liste.append([root[count+1:],len(files)])
 		liste.sort()
 		fichier = file("Databases/LFW/lfw-names_current.txt",'w')
@@ -185,7 +177,11 @@ def picturesDictionaryConstruction():
 """
         Construit les fichiers train.txt et test.txt contenant les noms des images utilisées
 """
-def trainAndTestConstruction(nbTrain):
+def trainAndTestConstruction(pourcentageTrain, nbImages):
+	nbImagesTrain = int( pourcentageTrain * nbImages )
+	if nbImagesTrain == 0 :
+		nbImagesTrain = 1
+	nbImagesTest = nbImages - nbImagesTrain
 	fichier = open("Databases/LFW/lfw-names_current.txt",'r')
 	lignes = fichier.read().split('\n')
 	lignes = lignes[:-1]  #On supprime le dernier element ''
@@ -200,11 +196,11 @@ def trainAndTestConstruction(nbTrain):
 	
 	(listeTrain, listeTest, 
 	 classesTrainLFW, classesTestLFW,
-	 exemplesTrainLFW, exemplesTestLFW) = listPictures(nbTrain, nom)
+	 exemplesTrainLFW, exemplesTestLFW) = listPictures(nbImagesTrain, nbImages, nom)
 	
 	(listeTrainORL, listeTestORL,
 	 classesTrainORL, classesTestORL,
-	 exemplesTrainORL, exemplesTestORL) = listPictures(np.min((nbTrain,9)),[], "Databases/orl_faces")
+	 exemplesTrainORL, exemplesTestORL) = listPictures(nbImagesTrain, np.min((nbImages,10)), [], "Databases/orl_faces")
 	
 	listeTrain.sort()
 	listeTest.sort()
@@ -215,10 +211,10 @@ def trainAndTestConstruction(nbTrain):
 	fichierTest.write(str(classesTestLFW)+' '+str(exemplesTestLFW)+'\n'+str(classesTestORL)+' '+str(exemplesTestORL)+'\n')
 	
 	for i in range(len(nom)):
-		fichierTrain.write(nom[i]+' '+str(np.min((nbTrain,nbMax[i])))+'\n')
-		nbTest = nbMax[i] - nbTrain
+		fichierTrain.write(nom[i]+' '+str(nbImagesTrain)+'\n')
+		nbTest = nbMax[i] - nbImages
 		if nbTest>0:
-			fichierTest.write(nom[i]+' '+str(nbTest)+'\n')
+			fichierTest.write(nom[i]+' '+str(nbImagesTest)+'\n')
 	
 	for i in range(len(listeTrain)):
 		fichierTrain.write(listeTrain[i]+'\n')
@@ -341,23 +337,24 @@ def drawCurves(x, y, cType, legend="", xlim="", ylim="", xlabel="", ylabel="", t
     if len(x) != len(y) != len(cType):
         print "Attention: Les deux listes doivent avoir la même taille."
         return -1
-        
-    pylab.plot(x, y, cType)
-        #pylab.annotate('Min: '+ str(np.min(y[i])),
-                       # xy=(np.argmin(y[i]), np.min(y[i])))
-                        #arrowprops=dict(arrowstyle='->'))
-    pylab.grid(bGrid)
+    
+    for i in range(len(x)):
+	    pylab.plot(x[i], y[i], cType[i])
+            pylab.annotate('Min: '+ str(np.min(y[i])),
+                        xy=(np.argmin(y[i]), np.min(y[i])),
+                        arrowprops=dict(arrowstyle='->'))
+	    pylab.grid(bGrid)
 	
 	# titre / labels / legende
+	    if legend != "":
+		    pylab.legend(legend)
     if title != "":
 	    pylab.title(title)
     if xlabel != "":
 	    pylab.xlabel(xlabel)
     if ylabel != "":
 	    pylab.ylabel(ylabel)
-    if legend != "":
-	    pylab.legend(legend)
-	
+		    
 	# bornes
     if xlim != "":
 	    pylab.xlim(xlim)
