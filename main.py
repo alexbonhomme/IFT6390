@@ -107,55 +107,59 @@ class Main (object):
             ## TEST ###########################
             #TODO Toute cette partie est a revoir pour sortir des graphes
             # de train, validation, test
-            dataTest, dataTestIndices, nClass = tools.loadImageData( "test", self.categorie )
+            for trainTest in ["train", "test"]:
+                dataTest, dataTestIndices, nClass = tools.loadImageData( trainTest, self.categorie )
 
             # compteurs de bons résultats   
-            nbGoodResult = 0
-            nbGoodResult2 = 0 
-            nbGoodResult3 = 0
+                nbGoodResult = 0
+                nbGoodResult2 = 0 
+                nbGoodResult3 = 0
 
-            for i in range(0, int( dataTest.shape[1] )):
+                for i in range(0, int( dataTest.shape[1] )):
                 #TODO faire ne projection matriciel
-                proj = pca_model.getProjection( dataTest[:,i] )
+                    proj = pca_model.getProjection( dataTest[:,i] )
 
                 # k = 1, pour réference
                 # on force k
-                knn_model.setK( 1 )
-                result1NN = knn_model.compute_predictions( proj )
-                if(result1NN == dataTestIndices[i]):
-                    nbGoodResult += 1
+                    knn_model.setK( 1 )
+                    result1NN = knn_model.compute_predictions( proj )
+                    if(result1NN == dataTestIndices[i]):
+                        nbGoodResult += 1
 
                 # k = n
                 # replace k a ca position initial
-                knn_model.setK( self.K )
-                resultKNN = knn_model.compute_predictions( proj )
-                if(resultKNN == dataTestIndices[i]):
-                    nbGoodResult2 += 1
+                    knn_model.setK( self.K )
+                    resultKNN = knn_model.compute_predictions( proj )
+                    if(resultKNN == dataTestIndices[i]):
+                        nbGoodResult2 += 1
 
-                #
-                resultParzen = parzen_model.compute_predictions( proj )
-                if(resultParzen == dataTestIndices[i]):
-                    nbGoodResult3 += 1
+                
+                    resultParzen = parzen_model.compute_predictions( proj )
+                    if(resultParzen == dataTestIndices[i]):
+                        nbGoodResult3 += 1
 
-                out_str = "Classic method: "+ str( result1NN ) +" | KNN method: "+ str( resultKNN ) +" | KNN+Parzen method: "+ str( resultParzen ) +" | Expected: "+ str( dataTestIndices[i] ) +"\n" # +1 car l'index de la matrice commence a 0
-                print_output(out_str)
+                    out_str = "Classic method: "+ str( result1NN ) +" | KNN method: "+ str( resultKNN ) +" | KNN+Parzen method: "+ str( resultParzen ) +" | Expected: "+ str( dataTestIndices[i] ) +"\n" # +1 car l'index de la matrice commence a 0
+                    print_output(out_str)
 
-            res = (float(nbGoodResult) / float(dataTest.shape[1])) * 100.
-            out_str = "\nAccuracy with classic method: %.3f" % res + "%\n"
-            res = (nbGoodResult2 / float(dataTest.shape[1])) * 100.
-            out_str += "Accuracy with KNN method (k="+ str( self.K ) +"): %.3f" % res + "%\n"
-            res = (nbGoodResult3 / float(dataTest.shape[1])) * 100.
-            out_str += "Accuracy with KNN + Parzen window method (theta="+ str( self.Theta ) +"): %.3f" % res + "%\n"
-            print_output(out_str)
-
-            ### Resultats
-            listeRes.append(res)
+                    resClassic = (float(nbGoodResult) / float(dataTest.shape[1])) * 100.
+                    out_str = "\nAccuracy with classic method: %.3f" % resClassic + "%\n"
+                    resKNN = (nbGoodResult2 / float(dataTest.shape[1])) * 100.
+                    out_str += "Accuracy with KNN method (k="+ str( self.K ) +"): %.3f" % resKNN + "%\n"
+                    res = (nbGoodResult3 / float(dataTest.shape[1])) * 100.
+                    out_str += "Accuracy with KNN + Parzen window method (theta="+ str( self.Theta ) +"): %.3f" % res + "%\n"
+                    print_output(out_str)
+            
+            #### recupere les valeurs finale de l'accuracy
+                listeRes.append( resClassic )
+                listeRes.append( resKNN )
+                listeRes.append( res )
+            
 
             #### Stockage
-            if self.stock == 1 :
-                fichier = open("curvAccuracyKnn"+self.categorie,"a")
-                fichier.write(str(self.nbExemples)+" "+str(res)+" "+str(self.K)+"\n")
-                fichier.close()
+                if self.stock == 1 :
+                    fichier = open("curvAccuracyKnn"+self.categorie,"a")
+                    fichier.write(str(self.nbExemples)+" "+str(res)+" "+str(self.K)+"\n")
+                    fichier.close()
         
         #### Recherche pas NNET
         elif algo == "NNET":
@@ -175,7 +179,6 @@ class Main (object):
 			#TODO Toute cette partie est a revoir pour sortir des graphes
 			# de train, validation, test
 			dataTest, dataTestIndices, nClass = tools.loadImageData( "test", self.categorie )
-
 			# compteurs de bons résultats   
 			nbGoodResult = 0
 
@@ -333,22 +336,46 @@ if __name__ == "__main__":
     if algo_type == "KNN":
         K = args.k
         Theta = args.theta
+        
+        #### initialisation des abscisses et ordonnees #
         xVector = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
-        yVector = []
+        yVectorClassicTrain = []
+        yVectorClassicTest = []
+        yVectorKNNTrain = []
+        yVectorKNNTest = []
+        yVectorParzenTrain = []
+        yVectorParzenTest = []
+
+        #### construction main #
         faceReco = Main( K=K, Theta=Theta, trainFile=trainFile, testFile=testFile, categorie=categorie, stock=stock, curv=curv, pourcentageTrain=pourcentageTrain, nbExemples=nbExemples, debug_mode=debug_mode)
         if curv == 1 :
             indice = 0
+
+            #### construction ordonnees et recuperation res
             for p in xVector:
                 faceReco.pourcentageTrain = p
                 listeRes = faceReco.main( algo=algo_type )
-                yVector.append( listeRes[0] )
+                yVectorClassicTrain.append( listeRes[0] )
+                yVectorClassicTest.append( listeRes[3] )
+                yVectorKNNTrain.append( listeRes[1] )
+                yVectorKNNTest.append( listeRes[4] )
+                yVectorParzenTrain.append( listeRes[2] )
+                yVectorParzenTest.append( listeRes[5] )
                 xVector[indice] = np.max(( int(p * nbExemples), 1 ))
                 indice += 1
+
+            #### construction des conteneurs de nos 6 listes d'abscisses et ordonnees
             x=[]
             y=[]
-            x.append(xVector)
-            y.append(yVector)
-            tools.drawCurves( x, y, ["g"], xlabel="Nbre ex. train par classe", ylabel="PrecisionTest")
+            for i in range(6):
+                x.append(xVector)         
+            y.append(yVectorClassicTrain)
+            y.append(yVectorClassicTest)
+            y.append(yVectorKNNTrain)
+            y.append(yVectorKNNTest)
+            y.append(yVectorParzenTrain)
+            y.append(yVectorParzenTest)
+            tools.drawCurves( x, y, ["g--", "g", "r--", "r", "b--", "b"], ["k=1 on train ", "k=1 on test", "k="+str(K)+" on train", "k="+str(K)+" on test", "Parzen theta="+str(Theta)+" on train", "Parzen theta="+str(Theta)+" on test"], title="Accuracy on Train/Test with "+categorie, xlabel="Examples p. class", ylabel="Accuracy")
         else : 
             listeRes = faceReco.main( algo=algo_type )
         

@@ -59,16 +59,19 @@ class Gui:
 		self.mainWindow.connect("delete_event", lambda a1,a2: gtk.main_quit())
 
 		# box principale
-		main_box = gtk.VBox(True, 0)
+		main_box = gtk.Table(4, 1, False)
 		main_box.set_border_width(10)
 		main_box.show()
 
 		box_select = gtk.VBox(True, 0)
 		box_select.show()
-		frame_0 = gtk.Frame("")
+		frame_0 = gtk.Frame("Général")
 		frame_0.add(box_select)
 		frame_0.show()
-		main_box.pack_start(frame_0, True, True, 10)
+		main_box.attach(frame_0, 0, 1, 0, 1)
+		box1 = gtk.Table(3, 1, True)
+		box1.show()
+		box_select.pack_start(box1, False, False, 10)
 
 		# nombre d'exemples
 		lab_menu1 = gtk.Label("Nombre d'exemple (train+test) par sujet :")
@@ -82,18 +85,13 @@ class Gui:
 		box_incr.connect("value-changed", self.updateParam, "NbExamples_value")
 		box_incr.show()
 
-		box1 = gtk.HBox(True, 0)
-		box1.pack_start(lab_menu1, True, True, 5)
-		box1.pack_start(box_incr, False, False, 5)
-		box1.show()
-		box_select.pack_start(box1, False, False, 10)
+		box1.attach(lab_menu1, 0, 1, 0, 1)
+		box1.attach(box_incr, 1, 2, 0, 1)
 		###
 
 		# menu de selection des donnée 
 		lab_menu1 = gtk.Label("Ensemble de données à utiliser :")
-		#lab_menu1.set_alignment(0, 0)
 		lab_menu1.show()
-
 		menu1 = gtk.OptionMenu()
 		menu_content = gtk.Menu()
 
@@ -110,18 +108,13 @@ class Gui:
 		menu1.set_menu(menu_content)
 		menu1.show()
 
-		box1 = gtk.HBox(True, 0)
-		box1.pack_start(lab_menu1, True, True, 5)
-		box1.pack_start(menu1, False, False, 5)
-		box1.show()
-		box_select.pack_start(box1, False, False, 10)
+		box1.attach(lab_menu1, 0, 1, 1, 2)
+		box1.attach(menu1, 1, 2, 1, 2)
 		###
 
 		# menu de selection des algo 
 		lab_menu1 = gtk.Label("Algorithme a utiliser :")
-		#lab_menu1.set_alignment(0, 0)
 		lab_menu1.show()
-
 		menu1 = gtk.OptionMenu()
 		menu_content = gtk.Menu()
 
@@ -138,11 +131,8 @@ class Gui:
 		menu1.set_menu(menu_content)
 		menu1.show()        
 
-		box1 = gtk.HBox(True, 0)
-		box1.pack_start(lab_menu1, True, True, 5)
-		box1.pack_start(menu1, False, False, 5)
-		box1.show()
-		box_select.pack_start(box1, False, False, 10)
+		box1.attach(lab_menu1, 0, 1, 2, 3)
+		box1.attach(menu1, 1, 2, 2, 3)	
 		###
 
 		# Cette box contient troutes les box de parametre (kppv, nnet, etc..)
@@ -152,11 +142,11 @@ class Gui:
 		frame_1 = gtk.Frame("Paramètres")
 		frame_1.add(box_param)
 		frame_1.show()
-		main_box.pack_start(frame_1, True, True, 10)
+		main_box.attach(frame_1, 0, 1, 1, 2)
 
 		# Box nnet
-		self.box_nnet = gtk.VBox(True, 0)
-		box_h1 = gtk.HBox(True, 0)
+		self.box_nnet = gtk.Table(2, 6, True)
+		
 		lab_1 = gtk.Label("Nombre d'époques :")
 		lab_1.set_justify(gtk.JUSTIFY_LEFT)
 		lab_1.show()
@@ -167,8 +157,8 @@ class Gui:
 		box_incr.set_snap_to_ticks(True)
 		box_incr.connect("value-changed", self.updateParam, "Epoch_value")
 		box_incr.show()
-		box_h1.pack_start(lab_1, True, True, 5)
-		box_h1.pack_start(box_incr, True, True, 5)
+		self.box_nnet.attach(lab_1, 0, 1, 0, 1)
+		self.box_nnet.attach(box_incr, 1, 2, 0, 1)
 
 		lab_1 = gtk.Label("Nombre de neurones :")
 		lab_1.set_justify(gtk.JUSTIFY_LEFT)
@@ -180,8 +170,8 @@ class Gui:
 		box_incr.set_snap_to_ticks(True)
 		box_incr.connect("value-changed", self.updateParam, "Hid_value")
 		box_incr.show()
-		box_h1.pack_start(lab_1, True, True, 5)
-		box_h1.pack_start(box_incr, True, True, 5)
+		self.box_nnet.attach(lab_1, 2, 3, 0, 1)
+		self.box_nnet.attach(box_incr, 3, 4, 0, 1)
 
 		lab_1 = gtk.Label("Taille du batch :")
 		lab_1.set_justify(gtk.JUSTIFY_LEFT)
@@ -193,13 +183,10 @@ class Gui:
 		box_incr.set_snap_to_ticks(True)
 		box_incr.connect("value-changed", self.updateParam, "Batch_value")
 		box_incr.show()
-		box_h1.pack_start(lab_1, True, True, 5)
-		box_h1.pack_start(box_incr, True, True, 5)
-		box_h1.show()
+		self.box_nnet.attach(lab_1, 4, 5, 0, 1)
+		self.box_nnet.attach(box_incr, 5, 6, 0, 1)		
 
-		self.box_nnet.pack_start(box_h1, True, True, 5)
-
-		box_h1 = gtk.HBox(True, 0)
+		
 		lab_1 = gtk.Label("Taux d'apprentissage :")
 		lab_1.set_justify(gtk.JUSTIFY_LEFT)
 		lab_1.show()
@@ -211,8 +198,8 @@ class Gui:
 		box_incr.set_snap_to_ticks(True)
 		box_incr.connect("value-changed", self.updateParam, "Lr_value")
 		box_incr.show()
-		box_h1.pack_start(lab_1, True, True, 5)
-		box_h1.pack_start(box_incr, True, True, 5)
+		self.box_nnet.attach(lab_1, 0, 1, 1, 2)
+		self.box_nnet.attach(box_incr, 1, 2, 1, 2)
 
 		lab_1 = gtk.Label("Pénalité L2 :")
 		lab_1.set_justify(gtk.JUSTIFY_LEFT)
@@ -225,15 +212,16 @@ class Gui:
 		box_incr.set_snap_to_ticks(True)
 		box_incr.connect("value-changed", self.updateParam, "Wd_value")
 		box_incr.show()
-		box_h1.pack_start(lab_1, True, True, 5)
-		box_h1.pack_start(box_incr, True, True, 5)
-		box_h1.show()
+		self.box_nnet.attach(lab_1, 2, 3, 1, 2)
+		self.box_nnet.attach(box_incr, 3, 4, 1 ,2)
 
-		self.box_nnet.pack_start(box_h1, True, True, 5)
 		box_param.pack_start(self.box_nnet, True, True, 5)
 
 		# Box kppv
-		self.box_kppv = gtk.HBox(True, 0)
+		self.box_kppv = gtk.Table(2, 2, True)
+		box_param.pack_start(self.box_kppv, True, True, 5)
+		self.box_kppv.show()
+		
 		lab_1 = gtk.Label("Nombre de voisins a consulter :")
 		lab_1.set_justify(gtk.JUSTIFY_LEFT)
 		lab_1.show()
@@ -246,8 +234,8 @@ class Gui:
 		box_incr.connect("value-changed", self.updateParam, "K_value")
 		box_incr.show()
 
-		self.box_kppv.pack_start(lab_1, True, True, 5)
-		self.box_kppv.pack_start(box_incr, True, True, 5)
+		self.box_kppv.attach(lab_1, 0, 1, 0, 1)
+		self.box_kppv.attach(box_incr, 1, 2, 0, 1)
 
 		lab_1 = gtk.Label("Ecart type (Parzen) :")
 		lab_1.set_justify(gtk.JUSTIFY_LEFT)
@@ -262,11 +250,8 @@ class Gui:
 		box_incr.connect("value-changed", self.updateParam, "Theta_value")
 		box_incr.show()
 
-		self.box_kppv.pack_start(lab_1, True, True, 5)
-		self.box_kppv.pack_start(box_incr, True, True, 5)
-
-		box_param.pack_start(self.box_kppv, True, True, 5)
-		self.box_kppv.show()
+		self.box_kppv.attach(lab_1, 0, 1, 1, 2)
+		self.box_kppv.attach(box_incr, 1, 2, 1, 2)
 
 		# output
 		box2 = gtk.HBox(True, 0)
@@ -274,29 +259,33 @@ class Gui:
 		frame_2 = gtk.Frame("Output")
 		frame_2.add(box2)
 		frame_2.show()
-		main_box.pack_start(frame_2, True, True, 10)
-
+		main_box.attach(frame_2, 0, 1, 2, 3)
 
 		scroll_win = gtk.ScrolledWindow()
 		scroll_win.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
-		scroll_win.set_size_request(1000, 100)
+		scroll_win.set_size_request(1000, 200)
 		self.textview = gtk.TextView()
 		self.textview.set_editable(False)
 		self.textview.show()
 		scroll_win.add(self.textview)
 		scroll_win.show()
-		box2.pack_start(scroll_win, False, False, 5)
+		box2.pack_start(scroll_win, True, True, 5)
 
 		# Bottom frame
+		box3 = gtk.Table(1, 2, True)
+		box3.show()
+		main_box.attach(box3, 0, 1, 3, 4)
+		
 		self.bt_run = gtk.Button("Exécuter l'algorithme", gtk.STOCK_EXECUTE)
 		self.bt_run.connect("clicked", self.run, None)
 		self.bt_run.set_flags(gtk.CAN_DEFAULT)
-
 		self.bt_run.show()
-		box3 = gtk.HBox(True, 0)
-		box3.pack_start(self.bt_run, True, True, 0)
-		box3.show()
-		main_box.pack_start(box3, True, True, 0)
+		box3.attach(self.bt_run, 1, 2, 0, 1)
+		
+		bt_quit = gtk.Button("Quitter")
+		bt_quit.connect("clicked", lambda wid: gtk.main_quit())
+		bt_quit.show()
+		box3.attach(bt_quit, 0, 1, 0, 1)
 
 		# Placement dans la fenetre principale
 		self.mainWindow.add(main_box)

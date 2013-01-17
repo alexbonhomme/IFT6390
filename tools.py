@@ -6,6 +6,7 @@ import os
 import viola_jones as vj
 import logging as log
 import pylab
+from matplotlib.font_manager import FontProperties
 
 """
 	Importe les images liste "filename" et les convertient en vecteurs
@@ -16,7 +17,6 @@ def loadImageData( trainTest="train", categorie="ORL"):
 
     # recupere chemins et indices de classes
 	(listeLFW, listeORL) = cheminsToLoad(trainTest)
-
 	if categorie=="LFW":
 		log.debug("Chargement des données LFW")
 		imageList = np.array( listeLFW )
@@ -39,7 +39,6 @@ def loadImageData( trainTest="train", categorie="ORL"):
 			
 			img = im.open(imageList[i,1])
 			faces_list.append( list(img.getdata()) )
-
 		return np.transpose(faces_list), imageList[:, 0].astype(int), len(compute_nb_class)
 
 """
@@ -53,7 +52,7 @@ def changeToGreyTot():
 	
 	for i in range(len(listeFiles)):
 		changeToGrey(listeFiles[i])
-		print(i)
+		
 		
 """
 
@@ -101,9 +100,9 @@ def listPictures(nbImagesTrain, nbImages, liste, type="Databases/LFW/lfw"):
 				ajoutTrain = 1
 				ajoutTest = 1
 				random.shuffle(files)
-				if len(files) >=  nbImages :
-					#print(len(files))
-					#print(root[count:])
+
+			#### observe les dossiers avec suffisamment d'images
+			if len(files) >=  nbImages :
 					for f in files:
 						if int(with_extension) == 0:
 							f = f.split('.')[0]
@@ -182,6 +181,8 @@ def trainAndTestConstruction(pourcentageTrain, nbImages):
 	if nbImagesTrain == 0 :
 		nbImagesTrain = 1
 	nbImagesTest = nbImages - nbImagesTrain
+	nbImagesTrainORL = int( pourcentageTrain * np.min((nbImages, 10)))
+	nbImagesORL = np.min((nbImages, 10))
 	fichier = open("Databases/LFW/lfw-names_current.txt",'r')
 	lignes = fichier.read().split('\n')
 	lignes = lignes[:-1]  #On supprime le dernier element ''
@@ -200,7 +201,7 @@ def trainAndTestConstruction(pourcentageTrain, nbImages):
 	
 	(listeTrainORL, listeTestORL,
 	 classesTrainORL, classesTestORL,
-	 exemplesTrainORL, exemplesTestORL) = listPictures(nbImagesTrain, np.min((nbImages,10)), [], "Databases/orl_faces")
+	 exemplesTrainORL, exemplesTestORL) = listPictures(nbImagesTrainORL, nbImagesORL, [], "Databases/orl_faces")
 	
 	listeTrain.sort()
 	listeTest.sort()
@@ -212,9 +213,7 @@ def trainAndTestConstruction(pourcentageTrain, nbImages):
 	
 	for i in range(len(nom)):
 		fichierTrain.write(nom[i]+' '+str(nbImagesTrain)+'\n')
-		nbTest = nbMax[i] - nbImages
-		if nbTest>0:
-			fichierTest.write(nom[i]+' '+str(nbImagesTest)+'\n')
+		fichierTest.write(nom[i]+' '+str(nbImagesTest)+'\n')
 	
 	for i in range(len(listeTrain)):
 		fichierTrain.write(listeTrain[i]+'\n')
@@ -333,21 +332,26 @@ def softmaxMat(X):
 #   filename: si renseigné, enregistre la figure dans un fichier nommé <filename.png>
 #
 ######################################################################################
-def drawCurves(x, y, cType, legend="", xlim="", ylim="", xlabel="", ylabel="", title="", bGrid=True, bDisplay=True, filename=""):
+def drawCurves(x, y, cType, labels=[], legend="", xlim="", ylim="", xlabel="", ylabel="", title="", bGrid=True, bDisplay=True, filename=""):
     if len(x) != len(y) != len(cType):
         print "Attention: Les deux listes doivent avoir la même taille."
         return -1
+
+    fig = pylab.figure()
+    ax = pylab.subplot(111)
     
     for i in range(len(x)):
-	    pylab.plot(x[i], y[i], cType[i])
+	    pylab.plot(x[i], y[i], cType[i], label=labels[i])
             pylab.annotate('Min: '+ str(np.min(y[i])),
                         xy=(np.argmin(y[i]), np.min(y[i])),
                         arrowprops=dict(arrowstyle='->'))
 	    pylab.grid(bGrid)
 	
 	# titre / labels / legende
-	    if legend != "":
-		    pylab.legend(legend)
+    box = ax.get_position()
+    ax.set_position([box.x0, box.y0, box.width * 0.7, box.height])
+    ax.legend(loc='center left', bbox_to_anchor=(1, 0.5))
+
     if title != "":
 	    pylab.title(title)
     if xlabel != "":
