@@ -151,19 +151,19 @@ class Main (object):
 		      # k = 1, pour réference
 		      # on force k
                     knn_model.setK( 1 )
-                    result1NN = knn_model.compute_predictions( proj )
+                    result1NN = knn_model.compute_predictions( dataTest_proj[:,i] )
                     if(result1NN == dataTestIndices[i]):
                         nbGoodResult += 1
 
 		            # k = n
 		            # replace k a ca position initial
                     knn_model.setK( self.K )
-                    resultKNN = knn_model.compute_predictions( proj )
+                    resultKNN = knn_model.compute_predictions( dataTest_proj[:,i] )
                     if(resultKNN == dataTestIndices[i]):
                         nbGoodResult2 += 1
 
                 
-                    resultParzen = parzen_model.compute_predictions( proj )
+                    resultParzen = parzen_model.compute_predictions( dataTest_proj[:,i] )
                     if(resultParzen == dataTestIndices[i]):
                         nbGoodResult3 += 1
      
