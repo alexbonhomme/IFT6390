@@ -52,7 +52,7 @@ class NeuralNetwork (object):
             test_features = test_set[:,:-1]
             test_targets = test_set[:,-1]
             
-        test_out = []  # Vecteur de sortie pour affichage
+        test_out = []  # Vecteur de sortie pour affichage test
         
         # Arret prématuré
         if EarlyStopping:

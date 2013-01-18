@@ -198,6 +198,13 @@ class Main (object):
 			#! contrairement au KNN le NNET prends les vecteurs de features en ligne et non pas en colonne
 			train_set = np.concatenate((dataTrain.T, dataTrainTargets), axis=1)
 
+                        # recuperation des données de validation
+			dataValidation, dataValidationIndices, nClass = tools.loadImageData( "validation", self.categorie )
+			print_output("Projection des données de validation...")
+			dataValidation_proj = pca_model.getProjection( dataValidation )
+			dataValidationTargets = (dataValidationIndices - 1).reshape(dataValidationIndices.shape[0], -1)
+			validation_set = np.concatenate((dataValidation_proj.T, dataValidationTargets), axis=1)
+
 			# recuperation des données de test
 			dataTest, dataTestIndices, nClass = tools.loadImageData( "test", self.categorie )
 			print_output("Projection des données de test...")
@@ -207,7 +214,10 @@ class Main (object):
 
 			# On build et on entraine le model pour recherche par KNN
 			nnet_model = NeuralNetwork( dataTrain.shape[0], self.n_hidden, nClass, self.lr, self.wd )
-			train_out, test_out = nnet_model.train( train_set, self.n_epoch, self.batch_size, test_set=test_set)
+                        if self.validation == 1:
+                            train_out, valid_out, test_out = nnet_model.train( train_set, self.n_epoch, self.batch_size, valid_set=validation_set, test_set=test_set)
+                        else :
+                            train_out, test_out = nnet_model.train( train_set, self.n_epoch, self.batch_size, test_set=test_set)
 
 			# affichage des courbes d'entrainement
 			x = []
@@ -223,7 +233,7 @@ class Main (object):
 			x.append(np.array(xrange(train_out.shape[0])))
 		
 			# parametres courbes train
-			color.append('r-')
+			color.append('g-')
 			legend.append("R Train")
 			filename += "_Train"
 			y.append(train_out[:,0])
@@ -231,21 +241,46 @@ class Main (object):
 			legend_err.append("Err Train")
 			filename_err += "_Train"
 
+                        # parametre courbes validation
+                        if self.validation == 1:
+                            valid_out = np.array(valid_out)
+                            x.append(np.array(xrange(valid_out.shape[0])))
+                            y.append(valid_out[:,0])
+                            y_err.append(valid_out[:,1])
+                            color.append('b-')
+                            legend.append("R Validation")
+                            legend_err.append("Err Validation")
+                            filename += "_Validation"
+                            filename_err += "_Validation"
+
 			# parametre courbes test
 			test_out = np.array(test_out)
 			x.append(np.array(xrange(test_out.shape[0])))
 			y.append(test_out[:,0])
 			y_err.append(test_out[:,1])
-			color.append('b-')
+			color.append('r-')
 			legend.append("R Test")
 			legend_err.append("Err Test")
 			filename += "_Test"
 			filename_err += "_Test"
+
 			
 			# affichage
-			title = u"\nEpoque: " + str(self.n_epoch) + " - Taille du batch: " + str(self.batch_size) + " - Neurones cachés: " + str(self.n_hidden) + "\nL2: " + str(self.wd) + " - Taux d'apprentissage: " + str(self.lr)
+			title = u"\nEpoque: " + str(self.n_epoch) + " - Taille du batch: " + str(self.batch_size) + u" - Neurones cachés: " + str(self.n_hidden) + "\nL2: " + str(self.wd) + " - Taux d'apprentissage: " + str(self.lr)
 			tools.drawCurves(x, y, color, legend, bDisplay=True, filename=filename, title=title, xlabel="Epoque", ylabel=u"Risque régularisé")
 			tools.drawCurves(x, y_err, color, legend_err, bDisplay=True, filename=filename_err, title=title, xlabel="Epoque", ylabel="Erreur classification")
+
+                         #### construction fichier pour courbes ameliorees
+                        if stock == 1 :
+                            fichier = open("curvErrorNNet"+''.join( ''.join( title.split(' ') ).split('\n') ),"w")
+                            fichier.write("#epoch errorTrain errorValidation errorTest\n")
+                            
+                        if len(x) == 3:
+                            for j in range(len( x[0] )):
+                                fichier.write(str( x[0][j] )+" "+str( y[0][j] )+" "+str( y[1][j] )+" "+str( y[2][j] )+"\n")
+                            fichier.close()
+
+                        
 			"""
 			/!\ Cette partie n'est plus utile car effectué dans le nnet durant le train
 			
@@ -480,13 +515,13 @@ if __name__ == "__main__":
                 legendVect.append("k=1 on validation ")
                 legendVect.append("k="+str(K)+" on validation")
                 legendVect.append("Parzen theta="+str(Theta)+" on train")
-
-            tools.drawCurves( x, y, colorVect, legendVect, title="Error Rate on Train/Test with "+categorie, xlabel="Examples p. class", ylabel="Error rate")
+            title = "Error Rate on Train/Test with "+categorie
+            tools.drawCurves( x, y, colorVect, legendVect, title=title, xlabel="Examples p. class", ylabel="Error rate", filename=IMG_DIR + "ErrorKnn"+str(K)+categorie)
 
             #### construction fichier pour courbes ameliorees
             if stock == 1 :
                 fichier = open("curvErrorKnn"+str(K)+categorie,"w")
-                fichier.write("#xVector yVectorClassicTrain yVectorClassicTest yVectorKNNTrain yVectorKNNTest yVectorParzenTrain yVectorParzenTest\n")
+                fichier.write("#nbExTrain errorClassicTrain errorClassicTest errorKNNTrain errorKNNTest errorParzenTrain errorParzenTest\n")
                 for i in range(len(xVector)) :
                     fichier.write(str(xVector[i])+" "+str(yVectorClassicTrain[i])+" "+str(yVectorClassicTest[i])+" "+str(yVectorKNNTrain[i])+" "+str(yVectorKNNTest[i])+" "+str(yVectorParzenTrain[i])+" "+str(yVectorParzenTest[i])+"\n")
                 fichier.close()
@@ -503,6 +538,6 @@ if __name__ == "__main__":
         lr = args.lr
         wd = args.wd
         faceReco = Main( batch_size=batch, n_epoch=n_epoch, n_hidden=n_hidden, lr=lr, wd=wd, 
-                         trainFile=trainFile, testFile=testFile, debug_mode=debug_mode, categorie=categorie, stock=stock, curv=curv, nbExemples=nbExemples)
+                         trainFile=trainFile, testFile=testFile, debug_mode=debug_mode, categorie=categorie, stock=stock, curv=curv, validation=validation, nbExemples=nbExemples)
         faceReco.main( algo=algo_type )
 
