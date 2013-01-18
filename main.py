@@ -266,18 +266,19 @@ class Main (object):
 
 			
 			# affichage
-			title = u"\nEpoque: " + str(self.n_epoch) + " - Taille du batch: " + str(self.batch_size) + u" - Neurones cachés: " + str(self.n_hidden) + "\nL2: " + str(self.wd) + " - Taux d'apprentissage: " + str(self.lr)
+			title = u"\nEpoque: " + str(self.n_epoch) + " - Taille du batch: " + str(self.batch_size) + u" - Neurones cachés: " + str(self.n_hidden) + "\nL2: " + str(self.wd) + " - Taux d'apprentissage: " + str(self.lr) + " - Catégorie: " + str(self.categorie)
 			tools.drawCurves(x, y, color, legend, bDisplay=True, filename=filename, title=title, xlabel="Epoque", ylabel=u"Risque régularisé")
 			tools.drawCurves(x, y_err, color, legend_err, bDisplay=True, filename=filename_err, title=title, xlabel="Epoque", ylabel="Erreur classification")
 
                          #### construction fichier pour courbes ameliorees
-                        if stock == 1 :
+                        if self.stock == 1 :
                             fichier = open("curvErrorNNet"+''.join( ''.join( title.split(' ') ).split('\n') ),"w")
                             fichier.write("#epoch errorTrain errorValidation errorTest\n")
                             
-                        if len(x) == 3:
-                            for j in range(len( x[0] )):
-                                fichier.write(str( x[0][j] )+" "+str( y[0][j] )+" "+str( y[1][j] )+" "+str( y[2][j] )+"\n")
+                            if len(x) == 3:
+                            	for j in range(len( x[0] )):
+                            	    fichier.write(str( x[0][j] )+" "+str( y[0][j] )+" "+str( y[1][j] )+" "+str( y[2][j] )+"\n")
+
                             fichier.close()
 
                         
