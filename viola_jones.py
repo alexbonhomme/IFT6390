@@ -111,7 +111,5 @@ class Viola_Jones (object):
 				    
 		log.info("Fin de la détection : " + str(len(faces_list)) + " visages ont été détectés.")
 
-		tmp = np.array(targets_list).reshape(len(targets_list), 1)
-		log.debug(tmp.shape)
-		return np.transpose(faces_list), tmp, len(compute_nb_class)
+		return np.transpose(faces_list), np.array(targets_list).reshape(len(targets_list), 1), len(compute_nb_class)
 
