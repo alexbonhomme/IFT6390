@@ -517,8 +517,8 @@ if __name__ == "__main__":
                 legendVect.append("k=1 on validation ")
                 legendVect.append("k="+str(K)+" on validation")
                 legendVect.append("Parzen theta="+str(Theta)+" on train")
-
-            tools.drawCurves( x, y, colorVect, legendVect, title="Error Rate on Train/Test with "+categorie, xlabel="Examples p. class", ylabel="Error rate", filename=''.join( title.split(' ') ))
+            title = "Error Rate on Train/Test with "+categorie
+            tools.drawCurves( x, y, colorVect, legendVect, title=title, xlabel="Examples p. class", ylabel="Error rate", filename=IMG_DIR + "ErrorKnn"+str(K)+categorie)
 
             #### construction fichier pour courbes ameliorees
             if stock == 1 :
