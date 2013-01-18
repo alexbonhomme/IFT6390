@@ -110,24 +110,24 @@ class Main (object):
             for trainTest in ["train", "test"]:
                 dataTest, dataTestIndices, nClass = tools.loadImageData( trainTest, self.categorie )
 
-            # compteurs de bons résultats   
+            	# compteurs de bons résultats   
                 nbGoodResult = 0
                 nbGoodResult2 = 0 
                 nbGoodResult3 = 0
 
                 for i in range(0, int( dataTest.shape[1] )):
-                #TODO faire ne projection matriciel
+                	#TODO faire ne projection matriciel
                     proj = pca_model.getProjection( dataTest[:,i] )
 
-                # k = 1, pour réference
-                # on force k
+		            # k = 1, pour réference
+		            # on force k
                     knn_model.setK( 1 )
                     result1NN = knn_model.compute_predictions( proj )
                     if(result1NN == dataTestIndices[i]):
                         nbGoodResult += 1
 
-                # k = n
-                # replace k a ca position initial
+		            # k = n
+		            # replace k a ca position initial
                     knn_model.setK( self.K )
                     resultKNN = knn_model.compute_predictions( proj )
                     if(resultKNN == dataTestIndices[i]):
@@ -141,25 +141,19 @@ class Main (object):
                     out_str = "Classic method: "+ str( result1NN ) +" | KNN method: "+ str( resultKNN ) +" | KNN+Parzen method: "+ str( resultParzen ) +" | Expected: "+ str( dataTestIndices[i] ) +"\n" # +1 car l'index de la matrice commence a 0
                     print_output(out_str)
 
-                    resClassic = (float(nbGoodResult) / float(dataTest.shape[1])) * 100.
-                    out_str = "\nAccuracy with classic method: %.3f" % resClassic + "%\n"
-                    resKNN = (nbGoodResult2 / float(dataTest.shape[1])) * 100.
-                    out_str += "Accuracy with KNN method (k="+ str( self.K ) +"): %.3f" % resKNN + "%\n"
-                    res = (nbGoodResult3 / float(dataTest.shape[1])) * 100.
-                    out_str += "Accuracy with KNN + Parzen window method (theta="+ str( self.Theta ) +"): %.3f" % res + "%\n"
-                    print_output(out_str)
+                resClassic = (float(nbGoodResult) / float(dataTest.shape[1])) * 100.
+                out_str = "\nAccuracy with classic method: %.3f" % resClassic + "%\n"
+                resKNN = (nbGoodResult2 / float(dataTest.shape[1])) * 100.
+                out_str += "Accuracy with KNN method (k="+ str( self.K ) +"): %.3f" % resKNN + "%\n"
+                res = (nbGoodResult3 / float(dataTest.shape[1])) * 100.
+                out_str += "Accuracy with KNN + Parzen window method (theta="+ str( self.Theta ) +"): %.3f" % res + "%\n"
+                print_output(out_str)
             
             #### recupere les valeurs finale de l'accuracy
-                listeRes.append( resClassic )
-                listeRes.append( resKNN )
-                listeRes.append( res )
+                listeRes.append( 100 - resClassic )
+                listeRes.append( 100 - resKNN )
+                listeRes.append( 100 - res )
             
-
-            #### Stockage
-                if self.stock == 1 :
-                    fichier = open("curvAccuracyKnn"+self.categorie,"a")
-                    fichier.write(str(self.nbExemples)+" "+str(res)+" "+str(self.K)+"\n")
-                    fichier.close()
         
         #### Recherche pas NNET
         elif algo == "NNET":
@@ -198,11 +192,7 @@ class Main (object):
 			out_str = "\nAccuracy : %.3f" % res + "%\n"
 			print_output(out_str)
                         
-                        #### Trace de courbes
-                        if self.stock == 1 :
-                            fichier = open("curvAccuracy"+self.categorie,"a")
-                            fichier.write(str(self.nbExemples)+" "+str(res)+"\n")
-                            fichier.close()
+                        
         return listeRes
 
 #### FIN CLASSE MAIN ####################################
@@ -375,9 +365,19 @@ if __name__ == "__main__":
             y.append(yVectorKNNTest)
             y.append(yVectorParzenTrain)
             y.append(yVectorParzenTest)
-            tools.drawCurves( x, y, ["g--", "g", "r--", "r", "b--", "b"], ["k=1 on train ", "k=1 on test", "k="+str(K)+" on train", "k="+str(K)+" on test", "Parzen theta="+str(Theta)+" on train", "Parzen theta="+str(Theta)+" on test"], title="Accuracy on Train/Test with "+categorie, xlabel="Examples p. class", ylabel="Accuracy")
+            tools.drawCurves( x, y, ["g--", "g", "r--", "r", "b--", "b"], ["k=1 on train ", "k=1 on test", "k="+str(K)+" on train", "k="+str(K)+" on test", "Parzen theta="+str(Theta)+" on train", "Parzen theta="+str(Theta)+" on test"], title="Error Rate on Train/Test with "+categorie, xlabel="Examples p. class", ylabel="Error rate")
+
+            #### construction fichier pour courbes ameliorees
+            if stock == 1 :
+                fichier = open("curvErrorKnn"+str(K)+categorie,"w")
+                fichier.write("#xVector yVectorClassicTrain yVectorClassicTest yVectorKNNTrain yVectorKNNTest yVectorParzenTrain yVectorParzenTest\n")
+                for i in range(len(xVector)) :
+                    fichier.write(str(xVector[i])+" "+str(yVectorClassicTrain[i])+" "+str(yVectorClassicTest[i])+" "+str(yVectorKNNTrain[i])+" "+str(yVectorKNNTest[i])+" "+str(yVectorParzenTrain[i])+" "+str(yVectorParzenTest[i])+"\n")
+                fichier.close()
+
         else : 
             listeRes = faceReco.main( algo=algo_type )
+
         
     
     elif algo_type == "NNET":
