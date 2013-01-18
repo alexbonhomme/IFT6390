@@ -1,0 +1,57 @@
+\documentclass[a4paper,10pt,twocolumn]{extarticle}
+\usepackage[T1]{fontenc}
+%\usepackage[utf8]{inputenc}
+\usepackage{lmodern}
+\usepackage[francais]{babel}
+\usepackage{textcomp}
+\usepackage[top=2cm,bottom=2cm,left=2cm,right=2cm]{geometry}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{mathrsfs}
+\usepackage{float}
+\usepackage{icomma}
+\usepackage{gensymb}
+\usepackage{graphicx}
+\usepackage{subcaption}
+\usepackage[font=sf, labelfont={sf,bf}, margin=1cm]{caption}
+\usepackage[french,onelanguage,ruled,lined]{algorithm2e} % pour pseudo code
+\usepackage{array}
+\usepackage{titlesec, fontspec, titling}
+
+% Specify different font for section headings
+\newfontfamily\headingfont[]{GillSans}
+\titleformat*{\section}{\LARGE\headingfont}
+\titleformat*{\subsection}{\Large\headingfont}
+\titleformat*{\subsubsection}{\large\headingfont}
+\renewcommand{\maketitlehooka}{\headingfont}
+
+\pretitle{\begin{flushleft}\fontsize{22}{18}}
+\posttitle{\par\end{flushleft}\vskip 0.5em}
+\preauthor{\begin{flushleft}\Large \lineskip 0.5em}
+\postauthor{\par\end{flushleft}}
+%\predate{\begin{flushleft}\large}
+%\postdate{\par\end{flushleft}}
+\setlength{\droptitle}{-1cm}
+\title{\textsf{Implémantation d’un système de détection et de reconnaissance faciale}}
+\author{Alexandre Bonhomme\\ {\normalsize Université Paul Sabatier, Toulouse}\\
+Florent Maufras\\ {\normalsize EFREI, Paris}\\
+Timothée Planté\\ {\normalsize EISTI, Pau}\\}% \small{BONA20128906}}
+\date{}
+
+\begin{document}
+\maketitle
+\section{Introduction}
+
+
+\section{Conclusion}
+
+
+\begin{thebibliography}{9}
+\bibitem{viola01}
+  \bsc{Viola P. and Jones M.}, 
+  \emph{Rapid object detection using a boosted cascade of simple features}.
+  Computer Vision and Pattern Recognition,
+  2001.
+
+\end{thebibliography}
+\end{document}
