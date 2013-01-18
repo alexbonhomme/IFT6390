@@ -367,7 +367,7 @@ class Gui:
             self.n_epoch = widget.get_value_as_int()
         elif data == "Hid_value":
             self.n_hidden = widget.get_value_as_int()
-        elif data == "Bath_value":
+        elif data == "Batch_value":
             self.batch_size = widget.get_value_as_int()
         elif data == "Lr_value":
             self.lr = widget.get_value()
