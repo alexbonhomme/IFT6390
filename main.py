@@ -150,16 +150,11 @@ class Main (object):
                     print_output(out_str)
             
             #### recupere les valeurs finale de l'accuracy
-                listeRes.append( resClassic )
-                listeRes.append( resKNN )
-                listeRes.append( res )
+                listeRes.append( 100 - resClassic )
+                listeRes.append( 100 - resKNN )
+                listeRes.append( 100 - res )
             
 
-            #### Stockage
-                if self.stock == 1 :
-                    fichier = open("curvAccuracyKnn"+self.categorie,"a")
-                    fichier.write(str(self.nbExemples)+" "+str(res)+" "+str(self.K)+"\n")
-                    fichier.close()
         
         #### Recherche pas NNET
         elif algo == "NNET":
@@ -198,11 +193,7 @@ class Main (object):
 			out_str = "\nAccuracy : %.3f" % res + "%\n"
 			print_output(out_str)
                         
-                        #### Trace de courbes
-                        if self.stock == 1 :
-                            fichier = open("curvAccuracy"+self.categorie,"a")
-                            fichier.write(str(self.nbExemples)+" "+str(res)+"\n")
-                            fichier.close()
+                        
         return listeRes
 
 #### FIN CLASSE MAIN ####################################
@@ -375,9 +366,19 @@ if __name__ == "__main__":
             y.append(yVectorKNNTest)
             y.append(yVectorParzenTrain)
             y.append(yVectorParzenTest)
-            tools.drawCurves( x, y, ["g--", "g", "r--", "r", "b--", "b"], ["k=1 on train ", "k=1 on test", "k="+str(K)+" on train", "k="+str(K)+" on test", "Parzen theta="+str(Theta)+" on train", "Parzen theta="+str(Theta)+" on test"], title="Accuracy on Train/Test with "+categorie, xlabel="Examples p. class", ylabel="Accuracy")
+            tools.drawCurves( x, y, ["g--", "g", "r--", "r", "b--", "b"], ["k=1 on train ", "k=1 on test", "k="+str(K)+" on train", "k="+str(K)+" on test", "Parzen theta="+str(Theta)+" on train", "Parzen theta="+str(Theta)+" on test"], title="Error Rate on Train/Test with "+categorie, xlabel="Examples p. class", ylabel="Error rate")
+
+            #### construction fichier pour courbes ameliorees
+            if stock == 1 :
+                fichier = open("curvErrorKnn"+K+categorie,"w")
+                fichier.write("#xVector yVectorClassicTrain yVectorClassicTest yVectorKNNTrain yVectorKNNTest yVectorParzenTrain yVectorParzenTest\n")
+                for i in range(xVector) :
+                    fichier.write(str(xVector[i])+" "+str(yVectorClassicTrain[i])+" "+str(yVectorclassicTest[i])+" "+str(yVectorKNNTrain[i])+" "+str(yVectorKNNTest[i])+" "+str(yVectorParzenTrain[i])+" "+str(yVectorParzenTest[i])+"\n")
+                fichier.close()
+
         else : 
             listeRes = faceReco.main( algo=algo_type )
+
         
     
     elif algo_type == "NNET":
