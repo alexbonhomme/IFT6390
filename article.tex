@@ -41,15 +41,17 @@ Timothée Planté\\ {\normalsize EISTI, Pau}\\}% \small{BONA20128906}}
 \begin{document}
 \maketitle
 \section{Introduction}
-Le but de notre projet est de prendre en entrée une image comportant un visage d'en faire la détection sur l'image puis d'en tester la reconnaissance sur une base de donnée.
+La reconnaissance faciale est actuellement un domaine en plein essort. Elle rentre petit à petit dans nos vies au travers de nos téléphones mobiles ou de nos ordinateurs portables par exemple. Malgré l'amélioration du taux de détection elle reste l'objet de nombreuses études actuellement.
 
-Au final toute image en entrée devrait mener vers un résultat indiquant si le visage qu'elle comporte est reconnu parmi les visages appris par le modèle que l'on a entraîné sur un nombre $x$ d'individu.
+L'objectif de notre projet sera de mettre en oeuvre un système complet permettant la détection et la recnnaissance de visage issue de plusieurs bases de données. Pour ce faire nous implémenterons différents algorithmes de reconnaissances et nous utiliserons la bibliothèque OpenCV \cite{opencv} et son implémentation de l'algorithme de Viola \& Jones pour la détection de visage.
 
 \section{Algorithmes mis en oeuvre}
-\subsection{K plus proches voisins et Fenêtres de Parzen}
-L'algorithme KNN correspond à l'algorithme recherchant les K plus proches voisins (nearest neighbor) et qui permet de classifier en fonction de la classe majoritaire dans ces K voisins sélectionnés.
+Au cours de notre projet nous avons confronté différents algorithmes afin de tester leurs aptitudes sur plusieurs ensembles de donnée différents.
 
-L'entraînement d'un tel algorithme correspond à l'apprentissage simple des données de l'ensemble d'entraînement. Pour tout nouvel élément test entrant il nous suffit alors de chercher les K plus proches voisins tiré de l'ensemble d'entraînement et d'attribuer comme classe la classe la plus représentée dans son voisinage.
+\subsection{K Plus Proches Voisins et Fenêtres de Parzen}
+L'algorithme des <<K plus proches voisins>> (KPPV) utilise le voisinage du point de test afin de déterminer ça classe. C'est la classe majoritaire parmis ces $K$ points qui sera attribuée au point de test (\ref{fig:knn}).
+
+Pour cet algorithme il n'y à pas d'apprentissage des paramètres sur l'ensemble d'entrainement, seulement une optimisation des l'hyperparamètres $K$ sur l'ensemble de validation.
 \begin{figure}[H]
   \begin{center}
     \includegraphics[width=100pt]{images_rapport/KNN.png}
@@ -57,13 +59,13 @@ L'entraînement d'un tel algorithme correspond à l'apprentissage simple des don
     \label{fig:knn}
   \end{center}
 \end{figure}
-Dans cet exemple le point de test (point rouge) va recevoir comme prédiction de classe la classe jaune car c'est elle la plus présente dans les K = 4 voisins les plus proches (zone de voisinage de ce point mis en évidence par le disque). Le disque ici n'est que représentatif pour mettre en évidence les voisins. Les points voisins pouvant être à une distance plus ou moins importantes de notre point test.
+Dans la Figure~\ref{fig:knn} le point de test (en rouge) va recevoir comme prédiction la classe jaune car c'est elle la plus présente dans les $K = 4$ voisins les plus proches. Le disque ici n'est que représentatif pour mettre en évidence les voisins. Les points voisins pouvant être à une distance plus ou moins importantes de notre point test.
 
 \subsubsection{Extension avec les fenêtres de Parzen}
-L'application que l'on a fait ici de Parzen nous permet ici de rajouter un poids à nos point. Plus un point sera distant du point à l'étude plus sont poids sera faible. Cela est calculé à partir d'une gaussienne centrée sur le point à l'étude et d'une largeur fixé par sigma, sigma dans notre cas est fixé par l'utilisateur.
+L'application que l'on à fait ici de Parzen nous permet de pondéré les points du voisinage. Plus un point sera distant du point à l'étude plus sont poids sera faible. Cela est calculé à partir d'une gaussienne centrée sur le point à l'étude et d'une largeur fixé par $\sigma$, dans notre cas $\sigma$ sera fixé par l'utilisateur.
 
 \subsection{Réseau de Neurones}
-L'algorithme du réseau de neurones (Neural Networks) est un modèle qui comporte plusieurs couches et l'entraînement d'un tel système est la tendance à réduire la perte/l'erreur à l'aide de plusieurs itérations. On part d'un état avec des poids définis aléatoirement et on tend alors par une réduction des erreurs à chaque itération vers un état d'apprentissage de notre modèle.
+Le réseau de neurone utilisé dans ce projet est de type Perceptron Multicouche. Ce modèle est entrainé par descente de gradient de bacth sur un ensemble d'entrainement afin d'optimiser les paramètres du réseau en réduisant le risque empirique régularisé. On tâchera ensuite d'optimiser les hyperparamètres de contrôle de capacité sur un ensemble de validation séparé.
 \begin{figure}[H]
   \begin{center}
     \includegraphics[width=220pt]{images_rapport/Neural_network.png}
@@ -71,24 +73,16 @@ L'algorithme du réseau de neurones (Neural Networks) est un modèle qui comport
     \label{fig:nnet}
   \end{center}
 \end{figure}
-La réduction de l'erreur revient à la minimisation du risque empirique et la réduction de ce dernier peut-être réalisé de diverses manières :
-\begin{description}
-  \item[back propagation] consiste en un une propagation de la correction lié à l'erreur depuis la sortie du système vers l'entrée
-  \item[feed forward] consiste en une propagation de l'erreur depuis l'entrée vers la sortie
-\end{description}
+Dans notre cas nous utiliserons une architechture monocouche (cf. Figure~\ref{fig:nnet}) et une pénalité de type <<weight decay>> (\ref{eq:penalité}) pour la régularisation car elle défavorisera les poids les plus lourds lors de l'apprentissage des paramètres. 
+\begin{align}\label{eq:penalité}
+  \Omega(\theta) = \| \mathbf{W}^{(1)} \|^2 + \| \mathbf{W}^{(2)} \|^2
+\end{align}
+Cette pénalité sera pondérée par un hyperparamètre $\lambda$.
 
-\section{Ensembles de données utilisés}
-\subsection{Description}
-Nos données sont découpées en deux ensemble : l'ensemble ORL et l'ensemble LFW.  Ces ensembles d'images ont été tiré de base de données d'institut.
+\subsection{Algorithme de Viola et Jones}
+Afin d'effectué efficassement la détection de visage nous avons utilisé une implémentation de l'algorithme de Viola et Jones \cite{viola01} proposé par la célèbre bibliothèque de traitement d'image \textit{OpenCV} \cite{opencv}.
 
-Dans le cas du jeu de donnée ORL, l'institut a prit diverses photographies en noir et blanc d’individus avec différentes postures et ce sur plusieurs années pour chacun. Ces clichés sont enregistrés au format pgm.
-
-Pour le second jeu de données, LFW, il s'agit de photographies tirées d'internet et sur lesquels un traitement de détection de visage (Viola et Jones) a été appliqué. Il récupérait alors les visages ainsi repéré en élargissant le cadre autour du visage. Toutes ces images sont en couleurs et au format jpg.
-
-\subsection{Prétraitements}
-Toutes les images sont alors traité et ce de façon différente en fonction de l'ensemble de données depuis lequel on la sélectionne. 
-
-Une photographie en couleur, de l'ensemble LFW, sera tout d'abord transformée en une image en niveau de gris puis ensuite on recadra toutes les images selon une taille unique sur toutes les photographies et ce autour des visages. La taille unique est définie par la sélection des maximum observés selon la largeur et la hauteur des cadres obtenus lors de la détection des visages. En effet lors de la détection du visage nous obtenons un encadrement de ce dernier en fonction d'une position, d'une hauteur et d'une largeur.
+Cet algorithme est basé sur le principe de <<boosting>> qui conciste à assembler plusieurs classifieurs faibles afin d'obtenir un classifieur à forte capacité. Plutôt que de travailler directement sur les pixel de l'image, Viola P. et Jones M., introduise des caractéristique appelées <<pseudo-Haar>> fortement inspirées des ondelettes de Haar. De plus il utilise une variante d'un algorithme de boosting très célèbre qui est l'<<AdaBoost>>.
 \begin{figure}[H]
         \centering
         \begin{subfigure}[b]{110pt}
@@ -103,9 +97,30 @@ Une photographie en couleur, de l'ensemble LFW, sera tout d'abord transformée e
                 \caption{Visage extrait}
                 \label{fig:lena_face}
         \end{subfigure}
-        \caption{Détection d'un visage par l'algorithme de Viola et Jones \cite{viola01}}
+        \caption{Détection d'un visage par l'algorithme de Viola et Jones \cite{viola01} \label{fig:viola_detect}}
 \end{figure}
-La transformation alors commune à toutes les images est la vectorisation (\ref{fig:vectorisation}) de ces dernières. Cela revient à passer d'une image matricielle à une image sous forme d'un vecteur selon un des deux axes de la matrice. L'axe choisit est celui des lignes.
+Cette technique est particulièrement efficace et offre d'excelents résultats pour la détection de visages (cf. Figure~\ref{fig:viola_detect}) et par extention la détection de motifs (ou d'objets) au sein d'une image.
+
+\section{Ensembles de données utilisés}
+Afin d'entrainer nos algorithme et de mesurer leurs perfomance nous avons essentiellement utilisé deux jeux de données.
+
+\subsection{Our Database of Faces (ORL \cite{orl})}
+Le premier ensemble de donnée utilisé est issu des laboratoire de l'entreprise \textit{AT\&T}. C'est un ensemble de taille moyenne qui regroupe au total 40 sujets différent avec 10 images par sujets. Les photos on été prise sous différentes postures et durant plusieurs années et on une taille de $92 \times 112$ pixels.
+
+Les images sont en niveaux de gris (NdG) et au format PGM.
+
+\subsection{Labeled Faces in the Wild Home (LFW \cite{lfw})}
+Pour le second jeu de données, il est mis a diposition par l'université du Massachusetts et il s'agit de photographies tirées d'Internet et sur lesquels l'algorithme de Viola et Jones \cite{viola01} a été appliqué afin d'obtenir une image de taille $250 \times 250$ pixels centré sur le visage.
+
+Cet ensemble est relativement grand puis-ce qu'il contient 13233 images de 5749 sujets différents. Les images sont en couleur et au format JPG.
+
+\subsection{Prétraitements des données}
+\subsubsection{Cas particulier : l'ensemble LFW}
+Contrairement à l'ensemble ORL, LFW nécéssite des prétraitement supplémentaires. En effet, nous avons utilisé l'ensemble LFW pour simuler une entrée réel dans noter système. Pour ce faire nous avons appliqué l'algorithme de Viola et Jones afin de détecter les visages au sein des images présentes dans l'ensemble.\\
+Nous avons ainsi pu extraire (après divers traitements de redimentionnement) une image de taille $92 \times 115$ pixels en plusieurs NdG.
+
+\subsubsection{Cas général}
+Appartir des images en différents NdG nous construisons une représentation vectoriel de celle-ci (cf. Figure~\ref{fig:vectorisation}).
 \begin{figure}[H]
   \begin{center}
     \includegraphics[width=220pt]{images_rapport/vectorisation.png}
@@ -113,6 +128,23 @@ La transformation alors commune à toutes les images est la vectorisation (\ref{
     \label{fig:vectorisation}
   \end{center}
 \end{figure}
+Cependant cette représentation est très lourde car elle contient de nombreuses caractéristiques. Afin de reduire la dimentionailé de nos données d'entraienement nous avons appliqué l'agorithme du \textit{PCA} (<<Principal Components Analysis>>), plus connu sous le nom de <<Eigenfaces>> \cite{turk91} lorsqu'il est appliqué à la reconnaissance facial.
+
+\subsubsection{Réduction de la dimentionnalité : PCA}
+Nous avons implémenté le PCA dans ca forme classique.\\
+On normalise l'ensemble de donnée en sustraillant le <<visage>> moyen :
+\begin{align}
+  X_N = X - \bar{x}
+\end{align}
+A la suite de quoi nous utilisons une <<astuce mathématique>> qui consiste à calculer la Décomposition en Valeurs Singulières (ou SVD pour <<Singular Value Decomposition>>) afin de déterminer les vecteurs propres de la matrice de covariance. On obtient alors :
+\begin{align}
+  X_N = USU^T
+\end{align}
+Ou les colonnes de $U$ contienent les vecteurs propres et $S^2$ les valeurs propres associées. On ne conserve alors qu'une nombre $M$ de vecteurs propres (ie. $M$ colonnes de la matrice $U$). Après réduction du nombre de colonne on obtient une matrice $U^{\prime}$ (aussi appelée, dans notre cas, <<Eigenspace>>) dans laquelle on projetent l'ensemble de donnée $X$ afin de déterminer la matrice de poids $W$ associée :
+\begin{align}
+  W = \langle (U^{\prime})^T , X \rangle
+\end{align}
+
 
 \section{Résultats}
 
@@ -128,17 +160,36 @@ Le sujet lui-même représente une difficulté quant à la recherche d'un bon r�
 
 
 \begin{thebibliography}{9}
-\bibitem{viola01}
-  \bsc{Viola P. and Jones M.}, 
-  \emph{Rapid object detection using a boosted cascade of simple features}.
-  Computer Vision and Pattern Recognition,
-  2001.
 \bibitem{turk91}
   \bsc{Turk M. and Pentland A.}, 
   \emph{Eigenfaces for recognition}.
   J. Cognitive Neuroscience,
-  1991.  
-  
+  1991. 
+\bibitem{orl}
+  \bsc{Samaria F. and
+      Harter A.}, 
+  \emph{Parameterisation of a stochastic model for human face identification}.
+  2nd IEEE Workshop on Applications of Computer Vision,
+  1994.
+\bibitem{opencv}
+  \bsc{Bradski G.}, 
+  \emph{The OpenCV Library}.
+  Dr. Dobb's Journal of Software Tools,
+  2000.
+\bibitem{viola01}
+  \bsc{Viola P. and 
+      Jones M.}, 
+  \emph{Rapid object detection using a boosted cascade of simple features}.
+  Computer Vision and Pattern Recognition,
+  2001.
+\bibitem{lfw}
+  \bsc{Huang G. B.,
+       Ramesh M.,
+       Berg T. and 
+       Learned-Miller E.}, 
+  \emph{Labeled Faces in the Wild: A Database for Studying Face Recognition in Unconstrained Environments}.
+  University of Massachusetts, Amherst,
+  2007.
 
 \end{thebibliography}
 \end{document}

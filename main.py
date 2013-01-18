@@ -148,8 +148,8 @@ class Main (object):
                 t_start = time.clock()
                 for i in range(0, int( dataTest.shape[1] )):
 
-		      # k = 1, pour réference
-		      # on force k
+					# k = 1, pour réference
+					# on force k
                     knn_model.setK( 1 )
                     result1NN = knn_model.compute_predictions( dataTest_proj[:,i] )
                     if(result1NN == dataTestIndices[i]):
@@ -304,8 +304,6 @@ class Main (object):
 			res = (float(nbGoodResult) / float(dataTest.shape[1])) * 100.
 			out_str = "\nAccuracy : %.3f" % res + "%\n"
 			print_output(out_str)
-<<<<<<< HEAD
-=======
             """            
    
         return listeRes
