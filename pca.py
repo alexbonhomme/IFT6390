@@ -65,5 +65,5 @@ class PCA (object):
     
     # Projection des images de test dans le "eigen space"
     def getProjection(self, data):
-        return np.dot( np.transpose( self.eigenVectors ), (data  - self.avg) )
+        return np.dot( np.transpose( self.eigenVectors ), (data  - self.avg.reshape( self.avg.shape[0], -1)) )
 

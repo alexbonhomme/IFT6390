@@ -14,6 +14,10 @@ from pca import PCA
 from knn import KNN
 from parzen import ParzenWindows
 from nnet import NeuralNetwork
+import time
+
+# Répertoire d'enregistrement des images
+IMG_DIR = "graphes/"
 
 #### DEBUT CLASSE MAIN ####################################
 class Main (object):
@@ -132,6 +136,8 @@ class Main (object):
                         
                     #else:
                         dataTest, dataTestIndices, nClass = tools.loadImageData( trainTest, self.categorie )
+                print_output("Projection des données de test...")
+                dataTest_proj = pca_model.getProjection( dataTest )
                 
 
             	# compteurs de bons résultats   
@@ -139,12 +145,11 @@ class Main (object):
                 nbGoodResult2 = 0 
                 nbGoodResult3 = 0
 
+                t_start = time.clock()
                 for i in range(0, int( dataTest.shape[1] )):
-                	#TODO faire ne projection matriciel
-                    proj = pca_model.getProjection( dataTest[:,i] )
 
-		            # k = 1, pour réference
-		            # on force k
+		      # k = 1, pour réference
+		      # on force k
                     knn_model.setK( 1 )
                     result1NN = knn_model.compute_predictions( proj )
                     if(result1NN == dataTestIndices[i]):
@@ -161,7 +166,7 @@ class Main (object):
                     resultParzen = parzen_model.compute_predictions( proj )
                     if(resultParzen == dataTestIndices[i]):
                         nbGoodResult3 += 1
-
+     
                     out_str = "Classic method: "+ str( result1NN ) +" | KNN method: "+ str( resultKNN ) +" | KNN+Parzen method: "+ str( resultParzen ) +" | Expected: "+ str( dataTestIndices[i] ) +"\n" # +1 car l'index de la matrice commence a 0
                     print_output(out_str)
 
@@ -172,11 +177,15 @@ class Main (object):
                 res = (nbGoodResult3 / float(dataTest.shape[1])) * 100.
                 out_str += "Accuracy with KNN + Parzen window method (theta="+ str( self.Theta ) +"): %.3f" % res + "%\n"
                 print_output(out_str)
-            
-            #### recupere les valeurs finale de l'accuracy
+                
+                t_stop = time.clock()
+                log.info("Temps total: %.4fs\n" % float(t_stop-t_start)) 
+
+				#### recupere les valeurs finale de l'erreur
                 listeRes.append( 100 - resClassic )
                 listeRes.append( 100 - resKNN )
                 listeRes.append( 100 - res )
+
             
         
         #### Recherche pas NNET
@@ -189,32 +198,80 @@ class Main (object):
 			#! contrairement au KNN le NNET prends les vecteurs de features en ligne et non pas en colonne
 			train_set = np.concatenate((dataTrain.T, dataTrainTargets), axis=1)
 
+			# recuperation des données de test
+			dataTest, dataTestIndices, nClass = tools.loadImageData( "test", self.categorie )
+			print_output("Projection des données de test...")
+			dataTest_proj = pca_model.getProjection( dataTest )
+			dataTestTargets = (dataTestIndices - 1).reshape(dataTestIndices.shape[0], -1)
+			test_set = np.concatenate((dataTest_proj.T, dataTestTargets), axis=1)
+
 			# On build et on entraine le model pour recherche par KNN
 			nnet_model = NeuralNetwork( dataTrain.shape[0], self.n_hidden, nClass, self.lr, self.wd )
-			nnet_model.train( train_set, self.n_epoch, self.batch_size )
+			train_out, test_out = nnet_model.train( train_set, self.n_epoch, self.batch_size, test_set=test_set)
 
+			# affichage des courbes d'entrainement
+			x = []
+			y = []
+			y_err = []
+			color = []
+			legend = []
+			legend_err = []
+			filename = IMG_DIR + "Risque__Epoch_"+ str(self.n_epoch) +"_Hidden_"+ str(self.n_hidden) +"_Lr_"+ str(self.lr) +"_L2_"+ str(self.wd) +"_"
+			filename_err = IMG_DIR + "Erreur_classification__Epoch_"+ str(self.n_epoch) +"_Hidden_"+ str(self.n_hidden) +"_Lr_"+ str(self.lr) +"_L2_"+ str(self.wd) +"_"
+
+			train_out = np.array(train_out)
+			x.append(np.array(xrange(train_out.shape[0])))
+		
+			# parametres courbes train
+			color.append('r-')
+			legend.append("R Train")
+			filename += "_Train"
+			y.append(train_out[:,0])
+			y_err.append(train_out[:,1])
+			legend_err.append("Err Train")
+			filename_err += "_Train"
+
+			# parametre courbes test
+			test_out = np.array(test_out)
+			x.append(np.array(xrange(test_out.shape[0])))
+			y.append(test_out[:,0])
+			y_err.append(test_out[:,1])
+			color.append('b-')
+			legend.append("R Test")
+			legend_err.append("Err Test")
+			filename += "_Test"
+			filename_err += "_Test"
+			
+			# affichage
+			title = u"\nEpoque: " + str(self.n_epoch) + " - Taille du batch: " + str(self.batch_size) + " - Neurones cachés: " + str(self.n_hidden) + "\nL2: " + str(self.wd) + " - Taux d'apprentissage: " + str(self.lr)
+			tools.drawCurves(x, y, color, legend, bDisplay=True, filename=filename, title=title, xlabel="Epoque", ylabel=u"Risque régularisé")
+			tools.drawCurves(x, y_err, color, legend_err, bDisplay=True, filename=filename_err, title=title, xlabel="Epoque", ylabel="Erreur classification")
+			"""
+			/!\ Cette partie n'est plus utile car effectué dans le nnet durant le train
+			
 			## TEST ###########################
 			#TODO Toute cette partie est a revoir pour sortir des graphes
 			# de train, validation, test
-			dataTest, dataTestIndices, nClass = tools.loadImageData( "test", self.categorie )
+			
 			# compteurs de bons résultats   
 			nbGoodResult = 0
 
 			for i in range(0, int( dataTest.shape[1] )):
-				#TODO faire ne projection matriciel
-				proj = pca_model.getProjection( dataTest[:,i] )
-				proj = proj.reshape(1, proj.shape[0])
 
 				#
-				resultNNET = np.argmax(nnet_model.compute_predictions( proj ), axis=1)[0] + 1
-				if(resultNNET == dataTestIndices[i]):
+				resultNNET = np.argmax(nnet_model.compute_predictions( dataTest_proj[:,i] ), axis=1)[0]
+				if(resultNNET == dataTestTargets[i]):
 					nbGoodResult += 1
-				out_str = "Result: "+ str( resultNNET ) + " | Expected: "+ str( dataTestIndices[i] ) +"\n" # +1 car l'index de la matrice commence a 0
+				out_str = "Result: "+ str( resultNNET ) + " | Expected: "+ str( dataTestTargets[i] ) +"\n" # +1 car l'index de la matrice commence a 0
 				print_output(out_str)
 
 			res = (float(nbGoodResult) / float(dataTest.shape[1])) * 100.
 			out_str = "\nAccuracy : %.3f" % res + "%\n"
 			print_output(out_str)
+<<<<<<< HEAD
+=======
+            """            
+   
         return listeRes
 
 #### FIN CLASSE MAIN ####################################

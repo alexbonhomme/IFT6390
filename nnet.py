@@ -111,31 +111,30 @@ class NeuralNetwork (object):
             R = np.sum(self.compute_loss(features, targets))
             L_total += R
             R = (R/features.shape[0])# + penality
+            log.info("Epoch %4d" % k + " - Temps de calcul = %.3fs" % float(t2-t1) + " - Cout optimisé total = %.3f" % L_total) 
+
             Err = self.compute_classif_error(train_set)
             out.append([R, Err])
+            log.info("Train:\tErreur de classification = %3.1f" % (Err*100.) + "%" + " - Cout moyen = %.4f" % R) 
             
             if valid_set != None:
                 R_valid = np.mean(self.compute_loss(valid_features, valid_targets))# + penality
                 Err_valid = self.compute_classif_error(valid_set)
                 valid_out.append([R_valid, Err_valid])
+                log.info("Valid:\tErreur de classification = %3.1f" % (Err_valid*100.) + "%" + " - Cout moyen = %.4f" % R_valid)
             
             if test_set != None:
                 R_test = np.mean(self.compute_loss(test_features, test_targets))# + penality
                 Err_test = self.compute_classif_error(test_set)
                 test_out.append([R_test, Err_test])
-            
-            # Affichage
-            log.info("Epoch %4d" % k + " - Temps de calcul = %.3fs" % float(t2-t1) + " - Cout optimisé total = %.3f" % L_total) 
-            log.info("Train:\tErreur de classification = %3.1f" % (Err*100.) + "%" + " - Cout moyen = %.4f" % R) 
-            #print "Valid:\tErreur de classification = %3.1f" % (Err_valid*100.), "%" + " - Cout moyen = %.4f" % R_valid
-            #print "Test: \tErreur de classification = %3.1f" % (Err_test*100.),  "%" + " - Cout moyen = %.4f" % R_test
+                log.info("Test: \tErreur de classification = %3.1f" % (Err_test*100.) +  "%" + " - Cout moyen = %.4f" % R_test)
             
             # Sortie dans un fichier
             if filename != "":
                 f_out.write("%f, %f, %f, %f, %f, %f\n" % (Err, R, Err_valid, R_valid, Err_test, R_test))
 
             # On mémorise les minimums
-            #"""
+            """
             if EarlyStopping:
                 # Si la perte précédente est supperieux on continue
                 if prev_R + 10e-6 > R_valid:  # Le epsilon est sensée evité les minima locaux... sensée...

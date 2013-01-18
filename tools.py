@@ -368,37 +368,35 @@ def softmaxMat(X):
 #   filename: si renseigné, enregistre la figure dans un fichier nommé <filename.png>
 #
 ######################################################################################
-def drawCurves(x, y, cType, labels=[], legend="", xlim="", ylim="", xlabel="", ylabel="", title="", bGrid=True, bDisplay=True, filename=""):
+def drawCurves(x, y, cType, legend="", xlim="", ylim="", xlabel="", ylabel="", title="", bGrid=True, bDisplay=True, filename=""):
     if len(x) != len(y) != len(cType):
         print "Attention: Les deux listes doivent avoir la même taille."
         return -1
-
-    fig = pylab.figure()
-    ax = pylab.subplot(111)
-    
-    for i in range(len(x)):
-	    pylab.plot(x[i], y[i], cType[i], label=labels[i])
-            pylab.annotate('Min: '+ str(np.min(y[i])),
+        
+    for i in xrange(len(x)):
+        pylab.plot(x[i], y[i], cType[i])
+        pylab.annotate('Min: '+ str(round(np.min(y[i]),3)),
                         xy=(np.argmin(y[i]), np.min(y[i])),
-                        arrowprops=dict(arrowstyle='->'))
-	    pylab.grid(bGrid)
+                        #xytext=(np.argmin(y[i])-(y[i].shape[0]/1000.), np.min(y[i])+(y[i].shape[0]/1000.)),
+                        va='top',
+                        ha='center')
+                        #arrowprops=dict(arrowstyle='->'))
+	pylab.grid(bGrid)
 	
 	# titre / labels / legende
-    box = ax.get_position()
-    ax.set_position([box.x0, box.y0, box.width * 0.7, box.height])
-    ax.legend(loc='center left', bbox_to_anchor=(1, 0.5))
-
-    if title != "":
+	if title != "":
 	    pylab.title(title)
-    if xlabel != "":
+	if xlabel != "":
 	    pylab.xlabel(xlabel)
-    if ylabel != "":
+	if ylabel != "":
 	    pylab.ylabel(ylabel)
-		    
+	if legend != "":
+	    pylab.legend(legend)
+	
 	# bornes
-    if xlim != "":
+	if xlim != "":
 	    pylab.xlim(xlim)
-    if ylim != "":
+	if ylim != "":
 	    pylab.ylim(ylim)
     
     # sauvegarde de la courbe
