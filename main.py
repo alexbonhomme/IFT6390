@@ -242,7 +242,7 @@ class Main (object):
 			filename_err += "_Train"
 
                         # parametre courbes validation
-                        if validation == 1:
+                        if self.validation == 1:
                             valid_out = np.array(valid_out)
                             x.append(np.array(xrange(valid_out.shape[0])))
                             y.append(valid_out[:,0])
