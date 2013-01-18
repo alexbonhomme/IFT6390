@@ -20,10 +20,10 @@ class Main (object):
 
     def __init__(self, K=1, Theta=0.5, 
                  batch_size=1, n_epoch=100, n_hidden=10, lr=0.001, wd=0.,
-                 trainFile="", testFile="", debug_mode=True, categorie="ORL", nbExemples=5, stock=0, curv=0, pourcentageTrain=0.5):
+                 trainFile="", testFile="", debug_mode=True, categorie="ORL", nbExemples=5, stock=0, curv=0, pourcentageTrain=0.6, validation=True):
         # KNN
         self.K = K
-        
+
         # Parzen
         self.Theta = Theta
         
@@ -33,18 +33,20 @@ class Main (object):
         self.n_hidden = n_hidden
         self.lr = lr
         self.wd = wd
-        
 
+        # validation
+        self.validation = validation
+        
         # categorie  ("LFW", "ORL", "BOTH"), nbExemples
         self.categorie = categorie
         self.nbExemples = nbExemples
         if self.categorie not in ["LFW", "ORL"]:
             log.error("La  categorie d'images étudiees doit être LFW ou ORL")
-        if self.nbExemples<2:
-             log.error("Le nombre d'exemples envisages doit >= 2")
+        if self.nbExemples < 4:
+             log.error("Le nombre d'exemples envisages doit >= 4")
         #if self.nbExemples>=400 and self.categorie=="LFW":
             #log.error("Le nombre d'entrees de l'ensemble d'entrainement doit etre constitue de moins de 400 exemples par classes pour le domaine LFW")
-        if self.nbExemples>10 and self.categorie == "ORL":
+        if self.nbExemples > 10 and self.categorie == "ORL":
             log.error("Le nombre d'entrees pour l'etude doit etre constitue de moins de 10 exemples par classes pour le domaine ORL")
         self.pourcentageTrain = pourcentageTrain
         if self.pourcentageTrain >= 1.0 or self.pourcentageTrain <= 0 :
@@ -76,6 +78,13 @@ class Main (object):
             else:
                 log.info(text)
         
+        
+        # liste des types de set
+        if self.validation == 1:
+            listeTypesSet = ["train", "validation", "test"]
+        else:
+            listeTypesSet = ["train", "test"]
+
         # liste des resultats utilises pour les courbes
         listeRes=[]
 
@@ -107,8 +116,23 @@ class Main (object):
             ## TEST ###########################
             #TODO Toute cette partie est a revoir pour sortir des graphes
             # de train, validation, test
-            for trainTest in ["train", "test"]:
-                dataTest, dataTestIndices, nClass = tools.loadImageData( trainTest, self.categorie )
+            for trainTest in listeTypesSet:
+                if trainTest == "train":
+                    dataTest, dataTestIndices = dataTrain, dataTrainIndices
+                else :
+                    ### si l'on n'effectue pas de validation on concatene les entrees de test et de validation initiales pour obtenir le test
+                    #if "validation" not in listeTypesSet:
+                        #dataTestInitial, dataTestInitialIndices, nClass = tools.loadImageData( "test", self.categorie )
+                        #dataValidation, dataValidationIndices, nClass = tools.loadImageData( "validation", self.categorie )
+                        #dataTest = np.zeros(dataTestInitial.size + dataValidation.size)
+                        #dataTestIndices = np.zeros( dataTest.size )
+                        #dataTest[ : dataTestInitial.size], dataTestIndices[ : dataTestInitial.size] = dataTestInitial, dataTestInitialIndices
+                        #dataTest[dataTestInitial.size : ], dataTestIndices[dataTestInitial.size : ] = dataValidation, dataValidationIndices
+                        
+                        
+                    #else:
+                        dataTest, dataTestIndices, nClass = tools.loadImageData( trainTest, self.categorie )
+                
 
             	# compteurs de bons résultats   
                 nbGoodResult = 0
@@ -191,8 +215,6 @@ class Main (object):
 			res = (float(nbGoodResult) / float(dataTest.shape[1])) * 100.
 			out_str = "\nAccuracy : %.3f" % res + "%\n"
 			print_output(out_str)
-                        
-                        
         return listeRes
 
 #### FIN CLASSE MAIN ####################################
@@ -230,7 +252,13 @@ if __name__ == "__main__":
                       dest="pourcentageTrain",
                       help="]0;1[, percent of training exemples",
                       type=float,  
-                      default=0.5)
+                      default=0.6)
+
+    parser.add_argument("--valid", 
+                      dest="validation",
+                      help="consideration of a validation set",
+                      type=bool,  
+                      default=False)
 
     parser.add_argument("--categorie", 
                       dest="categorie",
@@ -321,6 +349,8 @@ if __name__ == "__main__":
     stock = args.stock
     curv = args.curv
     pourcentageTrain = args.pourcentageTrain
+    validation = bool(args.validation)
+
 
     #### Début du programme
     if algo_type == "KNN":
@@ -328,16 +358,19 @@ if __name__ == "__main__":
         Theta = args.theta
         
         #### initialisation des abscisses et ordonnees #
-        xVector = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
+        xVector = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8]
         yVectorClassicTrain = []
+        yVectorClassicValidation = []
         yVectorClassicTest = []
         yVectorKNNTrain = []
+        yVectorKNNValidation = []
         yVectorKNNTest = []
         yVectorParzenTrain = []
+        yVectorParzenValidation = []
         yVectorParzenTest = []
 
         #### construction main #
-        faceReco = Main( K=K, Theta=Theta, trainFile=trainFile, testFile=testFile, categorie=categorie, stock=stock, curv=curv, pourcentageTrain=pourcentageTrain, nbExemples=nbExemples, debug_mode=debug_mode)
+        faceReco = Main( K=K, Theta=Theta, trainFile=trainFile, testFile=testFile, validation=validation, categorie=categorie, stock=stock, curv=curv, pourcentageTrain=pourcentageTrain, nbExemples=nbExemples, debug_mode=debug_mode)
         if curv == 1 :
             indice = 0
 
@@ -346,26 +379,54 @@ if __name__ == "__main__":
                 faceReco.pourcentageTrain = p
                 listeRes = faceReco.main( algo=algo_type )
                 yVectorClassicTrain.append( listeRes[0] )
-                yVectorClassicTest.append( listeRes[3] )
                 yVectorKNNTrain.append( listeRes[1] )
-                yVectorKNNTest.append( listeRes[4] )
                 yVectorParzenTrain.append( listeRes[2] )
-                yVectorParzenTest.append( listeRes[5] )
+                nbVectors = 6
+                 ### Si validation
+                if validation == 1 :
+                    yVectorClassicValidation.append( listeRes[3] )
+                    yVectorKNNValidation.append( listeRes[4] )
+                    yVectorParzenValidation.append( listeRes[5] )
+                    yVectorClassicTest.append( listeRes[6] )
+                    yVectorKNNTest.append( listeRes[7] )
+                    yVectorParzenTest.append( listeRes[8] )
+                    nbVectors = 9
+                else : 
+                    yVectorClassicTest.append( listeRes[3] )
+                    yVectorKNNTest.append( listeRes[4] )
+                    yVectorParzenTest.append( listeRes[5] )
                 xVector[indice] = np.max(( int(p * nbExemples), 1 ))
                 indice += 1
 
             #### construction des conteneurs de nos 6 listes d'abscisses et ordonnees
             x=[]
             y=[]
-            for i in range(6):
+            colorVect = ["g--", "b--", "r--", "g", "b", "r"] 
+            legendVect = ["k=1 on train ", "k="+str(K)+" on train", "Parzen theta="+str(Theta)+" on train", "k=1 on test ", "k="+str(K)+" on test", "Parzen theta="+str(Theta)+" on test"]
+            for i in range( nbVectors ):
                 x.append(xVector)         
             y.append(yVectorClassicTrain)
-            y.append(yVectorClassicTest)
             y.append(yVectorKNNTrain)
-            y.append(yVectorKNNTest)
             y.append(yVectorParzenTrain)
+            y.append(yVectorClassicTest)
+            y.append(yVectorKNNTest)
             y.append(yVectorParzenTest)
-            tools.drawCurves( x, y, ["g--", "g", "r--", "r", "b--", "b"], ["k=1 on train ", "k=1 on test", "k="+str(K)+" on train", "k="+str(K)+" on test", "Parzen theta="+str(Theta)+" on train", "Parzen theta="+str(Theta)+" on test"], title="Error Rate on Train/Test with "+categorie, xlabel="Examples p. class", ylabel="Error rate")
+
+            ### si validation
+            if validation == 1:
+                y.append(yVectorClassicTrain)
+                y.append(yVectorKNNValidation)
+                y.append(yVectorParzenValidation)
+
+                colorVect.append("g-.")
+                colorVect.append("b-.")
+                colorVect.append("r-.")
+
+                legendVect.append("k=1 on validation ")
+                legendVect.append("k="+str(K)+" on validation")
+                legendVect.append("Parzen theta="+str(Theta)+" on train")
+
+            tools.drawCurves( x, y, colorVect, legendVect, title="Error Rate on Train/Test with "+categorie, xlabel="Examples p. class", ylabel="Error rate")
 
             #### construction fichier pour courbes ameliorees
             if stock == 1 :

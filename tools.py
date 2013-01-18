@@ -78,16 +78,19 @@ def changeToGrey(filename):
 """
         Recupere la liste des images de type precise ('lfw' ou 'orl').
 """
-def listPictures(nbImagesTrain, nbImages, liste, type="Databases/LFW/lfw"):
+def listPictures(nbImagesTrain, nbImagesValidation, nbImages, liste, type="Databases/LFW/lfw"):
 		import os, mimetypes, random
 		classesTrain = 0
+		classesValidation = 0
 		classesTest = 0
 		exemplesTrain = 0
+		exemplesValidation = 0
 		exemplesTest = 0
 		with_extension = 1
  
 		path = os.path.join( os.getcwd(), type)
 		finalTrain = []
+		finalValidation = []
 		finalTest = []
 
 		for root, dirs, files in os.walk(path):
@@ -98,6 +101,7 @@ def listPictures(nbImagesTrain, nbImages, liste, type="Databases/LFW/lfw"):
 			if(files):
 				compteur = 0
 				ajoutTrain = 1
+				ajoutValidation = 1
 				ajoutTest = 1
 				random.shuffle(files)
 
@@ -115,17 +119,23 @@ def listPictures(nbImagesTrain, nbImages, liste, type="Databases/LFW/lfw"):
 							finalTrain.append(type+root[count:]+"/"+f)	
 							ajoutTrain = 0
 							compteur += 1
-						elif f != "README" and compteur >= nbImagesTrain and (root[count+1:] in liste or len(liste) == 0):
-							if compteur < nbImages :
-								if ajoutTest == 1:
-									classesTest += 1
-								exemplesTest += 1
-								finalTest.append(type+root[count:]+"/"+f)
-								ajoutTest = 0
-								compteur += 1
+						elif f != "README" and compteur >= nbImagesTrain and compteur < (nbImagesTrain + nbImagesValidation) and (root[count+1:] in liste or len(liste) == 0):
+							if ajoutValidation == 1:
+								classesValidation += 1
+							exemplesValidation += 1
+							finalValidation.append(type+root[count:]+"/"+f)	
+							ajoutValidation = 0
+							compteur += 1
+						elif f != "README" and compteur >= (nbImagesTrain + nbImagesValidation) and compteur < nbImages and (root[count+1:] in liste or len(liste) == 0):
+							if ajoutTest == 1:
+								classesTest += 1
+							exemplesTest += 1
+							finalTest.append(type+root[count:]+"/"+f)
+							ajoutTest = 0
+							compteur += 1
 					
              
-		return (finalTrain, finalTest, classesTrain, classesTest, exemplesTrain, exemplesTest)  
+		return (finalTrain, finalValidation, finalTest, classesTrain, classesValidation, classesTest, exemplesTrain, exemplesValidation, exemplesTest)  
 
 """
         Recupere la liste des dossiers de type LFW contenant au exactement nbImages images
@@ -177,16 +187,29 @@ def picturesDictionaryConstruction():
         Construit les fichiers train.txt et test.txt contenant les noms des images utilisées
 """
 def trainAndTestConstruction(pourcentageTrain, nbImages):
+
+	#### Cas LFW
 	nbImagesTrain = int( pourcentageTrain * nbImages )
 	if nbImagesTrain == 0 :
 		nbImagesTrain = 1
-	nbImagesTest = nbImages - nbImagesTrain
+	nbImagesValidation = int( (nbImages - nbImagesTrain) / 2)
+	if nbImagesValidation == 0 :
+		nbImagesValidation = 1
+	nbImagesTest = nbImages - (nbImagesTrain + nbImagesValidation)
+
+	#### Cas ORL
 	nbImagesTrainORL = int( pourcentageTrain * np.min((nbImages, 10)))
 	nbImagesORL = np.min((nbImages, 10))
+	nbImagesValidationORL = int( (nbImagesORL - nbImagesTrainORL) / 2)
+	if nbImagesValidationORL == 0 :
+		nbImagesValidationORL = 1
+	nbImagesTestORL = nbImagesORL - (nbImagesTrainORL + nbImagesValidationORL)
+
 	fichier = open("Databases/LFW/lfw-names_current.txt",'r')
 	lignes = fichier.read().split('\n')
 	lignes = lignes[:-1]  #On supprime le dernier element ''
 	fichierTrain = file('trainFile','w')
+	fichierValidation = file('validationFile','w')
 	fichierTest = file('testFile','w')
 	nom = []
 	nbMax = []
@@ -195,28 +218,37 @@ def trainAndTestConstruction(pourcentageTrain, nbImages):
 		nbMax.append(nb)
 		nom.append(mot)
 	
-	(listeTrain, listeTest, 
-	 classesTrainLFW, classesTestLFW,
-	 exemplesTrainLFW, exemplesTestLFW) = listPictures(nbImagesTrain, nbImages, nom)
+	#### recupere les donnees
+	(listeTrain, listeValidation, listeTest, 
+	 classesTrainLFW, classesValidationLFW, classesTestLFW,
+	 exemplesTrainLFW,  exemplesValidationLFW, exemplesTestLFW) = listPictures(nbImagesTrain, nbImagesValidation, nbImages, nom)
 	
-	(listeTrainORL, listeTestORL,
-	 classesTrainORL, classesTestORL,
-	 exemplesTrainORL, exemplesTestORL) = listPictures(nbImagesTrainORL, nbImagesORL, [], "Databases/orl_faces")
+	(listeTrainORL, listeValidationORL, listeTestORL,
+	 classesTrainORL, classesValidationORL, classesTestORL,
+	 exemplesTrainORL, exemplesValidationORL, exemplesTestORL) = listPictures(nbImagesTrainORL, nbImagesValidationORL, nbImagesORL, [], "Databases/orl_faces")
 	
 	listeTrain.sort()
+	listeValidation.sort()
 	listeTest.sort()
 	listeTrainORL.sort()
+	listeValidationORL.sort()
 	listeTestORL.sort()
 
+	#### ecriture des fichiers
 	fichierTrain.write(str(classesTrainLFW)+' '+str(exemplesTrainLFW)+'\n'+str(classesTrainORL)+' '+str(exemplesTrainORL)+'\n')
+	fichierValidation.write(str(classesValidationLFW)+' '+str(exemplesValidationLFW)+'\n'+str(classesValidationORL)+' '+str(exemplesValidationORL)+'\n')
 	fichierTest.write(str(classesTestLFW)+' '+str(exemplesTestLFW)+'\n'+str(classesTestORL)+' '+str(exemplesTestORL)+'\n')
 	
 	for i in range(len(nom)):
 		fichierTrain.write(nom[i]+' '+str(nbImagesTrain)+'\n')
+		fichierValidation.write(nom[i]+' '+str(nbImagesValidation)+'\n')
 		fichierTest.write(nom[i]+' '+str(nbImagesTest)+'\n')
 	
 	for i in range(len(listeTrain)):
 		fichierTrain.write(listeTrain[i]+'\n')
+		
+	for i in range(len(listeValidation)):
+		fichierValidation.write(listeValidation[i]+'\n')
 	
 	for i in range(len(listeTest)):
 		fichierTest.write(listeTest[i]+'\n')	
@@ -224,10 +256,14 @@ def trainAndTestConstruction(pourcentageTrain, nbImages):
 	for i in range(len(listeTrainORL)):
 		fichierTrain.write(listeTrainORL[i]+'\n')
 	
+	for i in range(len(listeValidationORL)):
+		fichierValidation.write(listeValidationORL[i]+'\n')
+
 	for i in range(len(listeTestORL)):
 		fichierTest.write(listeTestORL[i]+'\n')
 	
 	fichierTrain.close()
+	fichierValidation.close()
 	fichierTest.close()
 	return ( classesTrainLFW, classesTrainORL )
 
