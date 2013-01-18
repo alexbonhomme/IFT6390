@@ -14,9 +14,12 @@ from matplotlib.font_manager import FontProperties
 def loadImageData( trainTest="train", categorie="ORL"):
 
 	import Image as im
+	import random
 
     # recupere chemins et indices de classes
-	(listeLFW, listeORL) = cheminsToLoad(trainTest)
+	listeLFW, listeORL = cheminsToLoad(trainTest)
+	random.shuffle(listeLFW)
+	random.shuffle(listeORL)
 	if categorie=="LFW":
 		log.debug("Chargement des données LFW")
 		imageList = np.array( listeLFW )
