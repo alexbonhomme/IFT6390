@@ -454,7 +454,7 @@ if __name__ == "__main__":
         if curv == "n":
             xVector = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8]
         if curv == "k":
-            xVector = [1, 2, 3, 4, 5, 6, 7, 8]
+            xVector = [int( 0.1*nbExemples ), int( 0.2*nbExemples ), int( 0.3*nbExemples ), int( 0.4*nbExemples ), int( 0.5*nbExemples ), int( 0.6*nbExemples ), int( 0.7*nbExemples ), int( 0.8*nbExemples )]
         yVectorClassicTrain = []
         yVectorClassicValidation = []
         yVectorClassicTest = []
