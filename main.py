@@ -226,8 +226,8 @@ class Main (object):
 			color = []
 			legend = []
 			legend_err = []
-			filename = IMG_DIR + "Risque__Epoch_"+ str(self.n_epoch) +"_Hidden_"+ str(self.n_hidden) +"_Lr_"+ str(self.lr) +"_L2_"+ str(self.wd) +"_"
-			filename_err = IMG_DIR + "Erreur_classification__Epoch_"+ str(self.n_epoch) +"_Hidden_"+ str(self.n_hidden) +"_Lr_"+ str(self.lr) +"_L2_"+ str(self.wd) +"_"
+			filename = IMG_DIR + "Risque__Epoch_"+ str(self.n_epoch) +"_Hidden_"+ str(self.n_hidden) +"_Lr_"+ str(self.lr) +"_L2_"+ str(self.wd) + "_Categorie_" + str(self.categorie) + "_Batch_" + str(self.batch_size) + "_"
+			filename_err = IMG_DIR + "Erreur_classification__Epoch_"+ str(self.n_epoch) +"_Hidden_"+ str(self.n_hidden) +"_Lr_"+ str(self.lr) +"_L2_"+ str(self.wd) + "_Categorie_" + str(self.categorie) + "_Batch_" + str(self.batch_size) + "_"
 
 			train_out = np.array(train_out)
 			x.append(np.array(xrange(train_out.shape[0])))
@@ -266,7 +266,7 @@ class Main (object):
 
 			
 			# affichage
-			title = u"\nEpoque: " + str(self.n_epoch) + " - Taille du batch: " + str(self.batch_size) + u" - Neurones cachés: " + str(self.n_hidden) + "\nL2: " + str(self.wd) + " - Taux d'apprentissage: " + str(self.lr) + " - Catégorie: " + str(self.categorie)
+			title = u"\nEpoque: " + str(self.n_epoch) + " - Taille du batch: " + str(self.batch_size) + u" - Neurones cachés: " + str(self.n_hidden) + "\nL2: " + str(self.wd) + " - Taux d'apprentissage: " + str(self.lr) + u" - Catégorie: " + str(self.categorie)
 			tools.drawCurves(x, y, color, legend, bDisplay=True, filename=filename, title=title, xlabel="Epoque", ylabel=u"Risque régularisé")
 			tools.drawCurves(x, y_err, color, legend_err, bDisplay=True, filename=filename_err, title=title, xlabel="Epoque", ylabel="Erreur classification")
 
