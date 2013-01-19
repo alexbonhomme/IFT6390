@@ -208,7 +208,7 @@ L'ensemble LFW s'est avéré beaucoup plus difficile à appréander. En effet le
     \label{fig:knn_lfw}
   \end{center}
 \end{figure}
-Sur cet ensemble on vois clairement (cf. Figure~\ref{knn_lfw})que l'algorithme des K plus proches voisins est totalement inéfficasse. Celui-ci ne s'adapte pas du tout à cet ensemble compliqué à cause de ca faible capacité.
+Sur cet ensemble on vois clairement (cf. Figure~\ref{fig:knn_lfw}) que l'algorithme des K plus proches voisins est totalement inéfficasse. Celui-ci ne s'adapte pas du tout à cet ensemble compliqué à cause de sa faible capacité.
 
 \begin{figure}[H]
   \begin{center}
@@ -217,7 +217,7 @@ Sur cet ensemble on vois clairement (cf. Figure~\ref{knn_lfw})que l'algorithme d
     \label{fig:results_lfw}
   \end{center}
 \end{figure}
-Le réseaux de neurones donne des résultats plus prométeurs. Il nécessite en revanche un grand nombre d'image pour être efficase et atteindre un niveaude reconnaissance acceptable.
+Le réseaux de neurones donne des résultats plus prométeurs. Il nécessite en revanche un grand nombre d'exemples par classe pour être efficase et atteindre un niveau de reconnaissance acceptable. Les résultats de la Figure~\ref{fig:results_lfw} on été obtenus avec pret de $900$ neurones dans la couche caché et une moyenne de $300$ époques d'entrainement afin d'optimiser les paramètres. Une pénalité de $\lambda \sim 0.0025$ à aussi été appliqué afin de limiter le surapprentissage. Le taux d'apprentissage quant à lui se trouve au alentoire de $0.0005$ pour un mini batch de taille 10.
 
 \section{Particularités du projet}
 Une des caractéristiques de notre projet est qu'il a été réalisé par une équipe de trois personnes ayant suivi des formations différentes. De plus nous avons dû mettre en place un gestionnaire de version (Git) afin de pouvoir travailler efficacement malgré nos diponibilités très disparates.
