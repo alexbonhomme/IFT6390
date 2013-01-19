@@ -217,22 +217,18 @@ Sur cet ensemble on vois clairement (cf. Figure~\ref{fig:knn_lfw}) que l'algorit
     \label{fig:results_lfw}
   \end{center}
 \end{figure}
-Le réseaux de neurones donne des résultats plus prométeurs. Il nécessite en revanche un grand nombre d'exemples par classe pour être efficase et atteindre un niveau de reconnaissance acceptable. Les résultats de la Figure~\ref{fig:results_lfw} on été obtenus avec pret de $900$ neurones dans la couche caché et une moyenne de $300$ époques d'entrainement afin d'optimiser les paramètres. Une pénalité de $\lambda \sim 0.0025$ à aussi été appliqué afin de limiter le surapprentissage. Le taux d'apprentissage quant à lui se trouve au alentoire de $0.0005$ pour un mini batch de taille 10.
+Le réseaux de neurones donne des résultats plus prométeurs. Il nécessite en revanche un grand nombre d'exemples par classe pour être efficase et atteindre un niveau de reconnaissance acceptable. Les résultats de la Figure~\ref{fig:results_lfw} on été obtenus avec pret de $900$ neurones dans la couche caché et une moyenne de $300$ époques d'entrainement afin d'optimiser les paramètres. Une pénalité de $\lambda \simeq 0.0025$ à aussi été appliqué afin de limiter le surapprentissage. Le taux d'apprentissage quant à lui se trouve au alentoire de $0.0005$ pour un mini batch de taille 10.
 
-\section{Particularités du projet}
+\section{Conclusion}
 Une des caractéristiques de notre projet est qu'il a été réalisé par une équipe de trois personnes ayant suivi des formations différentes. De plus nous avons dû mettre en place un gestionnaire de version (Git) afin de pouvoir travailler efficacement malgré nos diponibilités très disparates.
 
 L'usage du langage Python a aussi ajouté son lot de complications car nous avons tous les trois découvert ce langage au début du semestre.
 
 La dernière difficulté, et non des moindres, concerne le sujet en lui-même. En effet, la reconnaissance faciale est un sujet d'étude actuel et aucun système n'est encore réellement fiable dans ce domaine.
 
-Nous avons cependant obtenu des résultats concluants sur le jeu de données ORL, confirmant l'efficacité de notre programme dans le domaine de la reconnaissance faciale .
+Nous avons cependant obtenu des résultats concluants sur le jeu de données ORL, confirmant l'efficacité de notre programme dans le domaine de la reconnaissance faciale. Ce dernier se montre moins concluant lorsqu'il s'agit d'un jeu de données comportant des portaits moins conventionnels comme le jeu de données LFW contennant nombre d'éléments perturbatoires (lunettes, micros, certaines images présentant aussi plusieurs visages), et marque ainsi une perspective d'améliorations futures.
 
-Ce dernier se montre moins concluant lorsqu'il s'agit d'un jeu de données comportant des portaits moins conventionnels comme le jeu de données LFW contennant nombre d'éléments perturbatoires (lunettes, micros, certaines images présentant aussi plusieurs visages), et marque ainsi une perspective d'améliorations futures.
-
-
-\section{Conclusion}
-
+Notre étude a abouti au fait qu'encore à ce jour la reconnaissance faciale n'est pas un outils fiable et qu'aucune des méthodes présentées dans ce document ne permet de reconnaître de façon assuré une personne parmi d'autres.e
 
 \begin{thebibliography}{9}
 \bibitem{turk91}
