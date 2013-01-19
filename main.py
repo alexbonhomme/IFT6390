@@ -150,8 +150,8 @@ class Main (object):
                 t_start = time.clock()
                 for i in range(0, int( dataTest.shape[1] )):
 
-		      # k = 1, pour réference
-		      # on force k
+					# k = 1, pour réference
+					# on force k
                     knn_model.setK( 1 )
                     result1NN = knn_model.compute_predictions( dataTest_proj[:,i] )
                     if(result1NN == dataTestIndices[i]):
@@ -268,18 +268,19 @@ class Main (object):
 
 			
 			# affichage
-			title = u"\nEpoque: " + str(self.n_epoch) + " - Taille du batch: " + str(self.batch_size) + u" - Neurones cachés: " + str(self.n_hidden) + "\nL2: " + str(self.wd) + " - Taux d'apprentissage: " + str(self.lr)
+			title = u"\nEpoque: " + str(self.n_epoch) + " - Taille du batch: " + str(self.batch_size) + u" - Neurones cachés: " + str(self.n_hidden) + "\nL2: " + str(self.wd) + " - Taux d'apprentissage: " + str(self.lr) + " - Catégorie: " + str(self.categorie)
 			tools.drawCurves(x, y, color, legend, bDisplay=True, filename=filename, title=title, xlabel="Epoque", ylabel=u"Risque régularisé")
 			tools.drawCurves(x, y_err, color, legend_err, bDisplay=True, filename=filename_err, title=title, xlabel="Epoque", ylabel="Erreur classification")
 
                          #### construction fichier pour courbes ameliorees
-                        if stock == 1 :
+                        if self.stock == 1 :
                             fichier = open("curvErrorNNet"+''.join( ''.join( title.split(' ') ).split('\n') ),"w")
                             fichier.write("#epoch errorTrain errorValidation errorTest\n")
                             
-                        if len(x) == 3:
-                            for j in range(len( x[0] )):
-                                fichier.write(str( x[0][j] )+" "+str( y[0][j] )+" "+str( y[1][j] )+" "+str( y[2][j] )+"\n")
+                            if len(x) == 3:
+                            	for j in range(len( x[0] )):
+                            	    fichier.write(str( x[0][j] )+" "+str( y[0][j] )+" "+str( y[1][j] )+" "+str( y[2][j] )+"\n")
+
                             fichier.close()
 
                         
@@ -305,8 +306,6 @@ class Main (object):
 			res = (float(nbGoodResult) / float(dataTest.shape[1])) * 100.
 			out_str = "\nAccuracy : %.3f" % res + "%\n"
 			print_output(out_str)
-<<<<<<< HEAD
-=======
             """            
    
         return listeRes
