@@ -146,7 +146,35 @@ Ou les colonnes de $U$ contienent les vecteurs propres et $S^2$ les valeurs prop
 \end{align}
 Ainsi, pour chaque nouvel exemple $x$ on calculera son vecteur de poids $w$ par projection dans dans le Eigenspace $U^{\prime}$.
 
+\section{Vérifications des algorithmes}
+Afin de vérifier le bon fonctionnement des algorithme implémenté nous avons mis en oeuvre quelques procédure du vérification.
+
+\subsection{Perceptron Multicouche}
+Pour le réseau de neurones nous avons vérifié nos résultat sur l'ensemble de donnée deux dimenssions <<MOONS>> et nous avons obtenue les résultats de la Figure~\ref{fig:verif_nnet}.
+\begin{figure}[H]
+        \centering
+        \begin{subfigure}[b]{110pt}
+                \centering
+                \includegraphics[width=110pt]{images_rapport/nnet_risque.png}
+                \caption{Risque empirique}
+        \end{subfigure}
+        \begin{subfigure}[b]{110pt}
+                \centering
+                \includegraphics[width=110pt]{images_rapport/nnet_erreur_classif.png}
+                \caption{Erreur de classification}
+        \end{subfigure}
+        \begin{subfigure}[b]{110pt}
+                \centering
+                \includegraphics[width=110pt]{images_rapport/nnet_fontieres.png}
+                \caption{Frontières de décision}
+        \end{subfigure}
+        \caption{Vérification du réseau de neurones}\label{fig:verif_nnet}
+\end{figure}
+
 \section{Résultats}
+\subsection{ORL}
+
+\subsection{LFW}
 
 \section{Particularités du projet}
 Une des caractéristiques de notre projet est qu'il a été réalisé par une équipe de trois personnes ayant suivient des formations différentes. De plus nous avons du mettre en place un gestionnaire de version (Git) afin de pouvoir travailler efficacement malgré nos diponibilités très disparates.
