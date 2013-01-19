@@ -146,7 +146,39 @@ Ou les colonnes de $U$ contienent les vecteurs propres et $S^2$ les valeurs prop
 \end{align}
 Ainsi, pour chaque nouvel exemple $x$ on calculera son vecteur de poids $w$ par projection dans dans le Eigenspace $U^{\prime}$.
 
+\section{Vérifications des algorithmes}
+Afin de vérifier le bon fonctionnement des algorithmes implémentés nous avons mis en oeuvre quelques procédures de vérification.
+
+\subsection{Perceptron Multicouche}
+Pour le réseau de neurones nous avons vérifié nos résultat sur l'ensemble de donnée deux dimenssions <<MOONS>> et nous avons obtenue les résultats de la Figure~\ref{fig:verif_nnet}.
+\begin{figure}[H]
+        \centering
+        \caption{Vérification du réseau de neurones}\label{fig:verif_nnet}
+        \begin{subfigure}[b]{220pt}
+                \centering
+                \caption{Risque empirique}
+                \includegraphics[width=220pt]{images_rapport/nnet_risque.png}
+        \end{subfigure}
+        \begin{subfigure}[b]{220pt}
+                \centering
+                \caption{Erreur de classification}
+                \includegraphics[width=220pt]{images_rapport/nnet_erreur_classif.png}
+        \end{subfigure}
+        \begin{subfigure}[b]{220pt}
+                \centering
+                \caption{Frontières de décision}
+                \includegraphics[width=220pt]{images_rapport/nnet_fontieres.png}
+        \end{subfigure}
+\end{figure}
+
+\subsection{Détection de visages}
+Pour vérifier le bon fonctionnement de la détection de visage nous avons effectué des essaies préalable du des images de test tel que celle de la Figure~\ref{fig:viola_detect}.
+
 \section{Résultats}
+\subsection{ORL}
+
+
+\subsection{LFW}
 
 \section{Particularités du projet}
 Une des caractéristiques de notre projet est qu'il a été réalisé par une équipe de trois personnes ayant suivient des formations différentes. De plus nous avons du mettre en place un gestionnaire de version (Git) afin de pouvoir travailler efficacement malgré nos diponibilités très disparates.
