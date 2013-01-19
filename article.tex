@@ -175,10 +175,24 @@ Pour le réseau de neurones nous avons vérifié nos résultat sur l'ensemble de
 Pour vérifier le bon fonctionnement de la détection de visage nous avons effectué des essaies préalable du des images de test tel que celle de la Figure~\ref{fig:viola_detect}.
 
 \section{Résultats}
-\subsection{ORL}
+Afin d'évaluer la performance des deux algorithmes sur les deux ensembles de données nous les avons chacun divisés en trois lots de la manière suivante :
+\begin{description}
+  \item[60\%] Ensemble d'entrainement
+  \item[20\%] Ensemble de validation
+  \item[20\%] Ensemble de test
+\end{description}
+Les lots son généré de manière aléatoire à chaque lancement de l'application.
 
-
-\subsection{LFW}
+Pour chaque ensemble de test nous avons évalué l'algorithme du KNN et le Perceptron Multicouche avec différentes valeurs d'hyperparamètres.
+\begin{figure}[H]
+  \begin{center}
+    \includegraphics[width=220pt]{images_rapport/hist_orl.png}
+    \caption{Meilleurs résultats pour l'ensemble ORL}
+    \label{fig:results_orl}
+  \end{center}
+\end{figure}
+Comme le montre la Figure~\ref{results_orl} sur le jeu de donnée ORL l'algorithme du KNN est très performant avec pret de 90\% de précision pour $K = 1$. En revanche on observe que l'augmentation de nombre de voisins n'est pas très efficase, voir très inefficase pour un faible nombre d'exemples.
+TODO NNET
 
 \section{Particularités du projet}
 Une des caractéristiques de notre projet est qu'il a été réalisé par une équipe de trois personnes ayant suivient des formations différentes. De plus nous avons du mettre en place un gestionnaire de version (Git) afin de pouvoir travailler efficacement malgré nos diponibilités très disparates.
