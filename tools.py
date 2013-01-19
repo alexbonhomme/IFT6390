@@ -394,7 +394,7 @@ def drawCurves(x, y, cType, legend="", xlim="", ylim="", xlabel="", ylabel="", t
 	if ylabel != "":
 	    pylab.ylabel(ylabel)
 	if legend != "":
-	    pylab.legend(legend)
+	    pylab.legend(legend, "best")
 	
 	# bornes
 	if xlim != "":

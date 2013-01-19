@@ -24,7 +24,7 @@ class Main (object):
 
     def __init__(self, K=1, Theta=0.5, 
                  batch_size=1, n_epoch=100, n_hidden=10, lr=0.001, wd=0.,
-                 trainFile="", testFile="", debug_mode=True, categorie="ORL", nbExemples=5, stock=0, curv=0, pourcentageTrain=0.6, validation=True):
+                 trainFile="", testFile="", debug_mode=True, categorie="ORL", nbExemples=5, stock=0, curv="0", pourcentageTrain=0.6, validation=True):
         # KNN
         self.K = K
 
@@ -61,8 +61,10 @@ class Main (object):
         if self.stock not in [0,1]:
             self.stock = 0
         self.curv = curv
-        if self.curv not in [0,1]:
-            self.curv = 0
+        if self.curv == "n" :
+            self.curv = 1
+        if self.curv not in ["k", "n", "0"]:
+            self.curv = "0"
 
         # logger pour debbug
         if debug_mode:
@@ -364,9 +366,9 @@ if __name__ == "__main__":
 
     parser.add_argument("--curv", 
                       dest="curv",
-                      help="1 si l'on veut tracer les courbes, 0 sinon", 
-                      type=int,
-                      default=0)
+                      help="k si l'on veut tracer les courbes en fonction de k, n si l'on veut tracer les courbes en fonction du nombre d'exemples Train", 
+                      type=str,
+                      default="0")
     
     # sous parseur pour knn et nnet
     subparsers = parser.add_subparsers(title='Algorythms',
@@ -449,7 +451,10 @@ if __name__ == "__main__":
         Theta = args.theta
         
         #### initialisation des abscisses et ordonnees #
-        xVector = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8]
+        if curv == "n":
+            xVector = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8]
+        if curv == "k":
+            xVector = [int( 0.1*nbExemples ), int( 0.2*nbExemples ), int( 0.3*nbExemples ), int( 0.4*nbExemples ), int( 0.5*nbExemples ), int( 0.6*nbExemples ), int( 0.7*nbExemples ), int( 0.8*nbExemples )]
         yVectorClassicTrain = []
         yVectorClassicValidation = []
         yVectorClassicTest = []
@@ -462,17 +467,20 @@ if __name__ == "__main__":
 
         #### construction main #
         faceReco = Main( K=K, Theta=Theta, trainFile=trainFile, testFile=testFile, validation=validation, categorie=categorie, stock=stock, curv=curv, pourcentageTrain=pourcentageTrain, nbExemples=nbExemples, debug_mode=debug_mode)
-        if curv == 1 :
+        if curv != "0" :
             indice = 0
-
-            #### construction ordonnees et recuperation res
+            
+            #### constru,,ction ordonnees et recuperation res
             for p in xVector:
-                faceReco.pourcentageTrain = p
+                if curv == "n" :
+                    faceReco.pourcentageTrain = p
+                if curv == "k" :
+                    faceReco.K = p
                 listeRes = faceReco.main( algo=algo_type )
                 yVectorClassicTrain.append( listeRes[0] )
                 yVectorKNNTrain.append( listeRes[1] )
                 yVectorParzenTrain.append( listeRes[2] )
-                nbVectors = 6
+
                  ### Si validation
                 if validation == 1 :
                     yVectorClassicValidation.append( listeRes[3] )
@@ -481,47 +489,76 @@ if __name__ == "__main__":
                     yVectorClassicTest.append( listeRes[6] )
                     yVectorKNNTest.append( listeRes[7] )
                     yVectorParzenTest.append( listeRes[8] )
-                    nbVectors = 9
                 else : 
                     yVectorClassicTest.append( listeRes[3] )
                     yVectorKNNTest.append( listeRes[4] )
                     yVectorParzenTest.append( listeRes[5] )
-                xVector[indice] = np.max(( int(p * nbExemples), 1 ))
-                indice += 1
+                if curv == "n" :
+                    xVector[indice] = np.max(( int(p * nbExemples), 1 ))
+                    indice += 1
 
             #### construction des conteneurs de nos 6 listes d'abscisses et ordonnees
             x=[]
-            y=[]
-            colorVect = ["g--", "b--", "r--", "g", "b", "r"] 
-            legendVect = ["k=1 on train ", "k="+str(K)+" on train", "Parzen theta="+str(Theta)+" on train", "k=1 on test ", "k="+str(K)+" on test", "Parzen theta="+str(Theta)+" on test"]
-            for i in range( nbVectors ):
-                x.append(xVector)         
-            y.append(yVectorClassicTrain)
+            y=[] 
+            if curv == "n":
+                nbVectors = 6
+                colorVect = ["g--", "b--", "r--", "g", "b", "r"]
+                legendVect = ["k=1 on train ", "k="+str(K)+" on train", "Parzen theta="+str(Theta)+" on train", "k=1 on test ", "k="+str(K)+" on test", "Parzen theta="+str(Theta)+" on test"]
+            if curv == "k":
+                nbVectors = 4
+                colorVect = ["g--", "r--", "g", "r"]
+                legendVect = ["Train", "+ Parzen theta="+str(Theta)+" Train", "Test", "+ Parzen theta="+str(Theta)+" Test"]
+               
+            if curv == "n" : 
+                y.append(yVectorClassicTrain)
             y.append(yVectorKNNTrain)
             y.append(yVectorParzenTrain)
-            y.append(yVectorClassicTest)
+            if curv == "n" : 
+                y.append(yVectorClassicTest)
             y.append(yVectorKNNTest)
             y.append(yVectorParzenTest)
 
+
             ### si validation
             if validation == 1:
-                y.append(yVectorClassicTrain)
+               
+                if curv == "n" :
+                    nbVectors += 3
+                if curv == "k" :
+                    nbVectors += 2
+                if curv == "n" :
+                    y.append(yVectorClassicTrain)
                 y.append(yVectorKNNValidation)
                 y.append(yVectorParzenValidation)
 
-                colorVect.append("g-.")
+                if curv == "n" :
+                    colorVect.append("g-.")
                 colorVect.append("b-.")
                 colorVect.append("r-.")
 
-                legendVect.append("k=1 on validation ")
-                legendVect.append("k="+str(K)+" on validation")
-                legendVect.append("Parzen theta="+str(Theta)+" on train")
-            title = "Error Rate on Train/Test with "+categorie
-            tools.drawCurves( x, y, colorVect, legendVect, title=title, xlabel="Examples p. class", ylabel="Error rate", filename=IMG_DIR + "ErrorKnn"+str(K)+categorie)
+                if curv == "n" :
+                    legendVect.append("k=1 on validation ")
+                    legendVect.append("k="+str(K)+" on validation")
+                if curv == "k" :
+                    legendVect.append("Validation")
+                legendVect.append("Parzen theta="+str(Theta)+" on validation")
+
+            for i in range( nbVectors ):
+                x.append(xVector)  
+
+            if curv == "n" :
+                filename = IMG_DIR + "ErrorKnn"+str(K)+"Ex"+str(nbExemples)+categorie
+                title = "Error Rate on Train/Test with "+categorie
+                xlabel = "Examples p. class"
+            if curv == "k" :
+                filename = IMG_DIR + "ErrorKnnEx"+str(nbExemples)+categorie
+                title = "Error Rate with "+str(nbExemples)+" on "+categorie
+                xlabel = "K"
+            tools.drawCurves( x, y, colorVect, legendVect, title=title, xlabel=xlabel, ylabel="Error rate", filename=filename)
 
             #### construction fichier pour courbes ameliorees
             if stock == 1 :
-                fichier = open("curvErrorKnn"+str(K)+categorie,"w")
+                fichier = open("curvErrorKnn"+str(K)+"Ex"+str(nbExemples)+categorie,"w")
                 fichier.write("#nbExTrain errorClassicTrain errorClassicTest errorKNNTrain errorKNNTest errorParzenTrain errorParzenTest\n")
                 for i in range(len(xVector)) :
                     fichier.write(str(xVector[i])+" "+str(yVectorClassicTrain[i])+" "+str(yVectorClassicTest[i])+" "+str(yVectorKNNTrain[i])+" "+str(yVectorKNNTest[i])+" "+str(yVectorParzenTrain[i])+" "+str(yVectorParzenTest[i])+"\n")
