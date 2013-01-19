@@ -184,6 +184,8 @@ Afin d'évaluer la performance des deux algorithmes sur les deux ensembles de do
 Les lots son généré de manière aléatoire à chaque lancement de l'application.
 
 Pour chaque ensemble de test nous avons évalué l'algorithme du KNN et le Perceptron Multicouche avec différentes valeurs d'hyperparamètres.
+
+\subsection{Ensemble ORL}
 \begin{figure}[H]
   \begin{center}
     \includegraphics[width=220pt]{images_rapport/hist_orl.png}
@@ -191,8 +193,31 @@ Pour chaque ensemble de test nous avons évalué l'algorithme du KNN et le Perce
     \label{fig:results_orl}
   \end{center}
 \end{figure}
-Comme le montre la Figure~\ref{results_orl} sur le jeu de donnée ORL l'algorithme du KNN est très performant avec pret de 90\% de précision pour $K = 1$. En revanche on observe que l'augmentation de nombre de voisins n'est pas très efficase, voir très inefficase pour un faible nombre d'exemples.
-TODO NNET
+Comme le montre la Figure~\ref{fig:results_orl} sur le jeu de donnée ORL l'algorithme du KNN est très performant avec pret de 90\% de précision pour $K = 1$. En revanche on observe que l'augmentation de nombre de voisins n'est pas très efficase, voir très inefficase pour un faible nombre d'exemples.
+
+Le Réseau de Neurone quand à lui donne des résultats mitigés et parfois aléatoirement très mauvais. Les hyperparamètres sont beaucoup plus difficiles à optimiser car plus nombreux ce qui entraine parfois des résultats abérants. Nous n'avons pas réussit à optenir de bon résultats constants avec cet algorithme sur ce jeu d'entrainement.
+
+En conclusion pour cet ensemble <<simple>> la technique des K plus proches voisins est de loin la meilleur et la plus stable avec un $K = 1$.
+
+\subsection{Ensemble LFW}
+L'ensemble LFW s'est avéré beaucoup plus difficile à appréander. En effet les images sont de moins bonnes qualités, les visages sont souvent de profil et peuvent comporter divers expressions.
+\begin{figure}[H]
+  \begin{center}
+    \includegraphics[width=220pt]{images_rapport/ErrorKnnEx75LFW.png}
+    \caption{Observation des résultats du KNN}
+    \label{fig:knn_lfw}
+  \end{center}
+\end{figure}
+Sur cet ensemble on vois clairement (cf. Figure~\ref{knn_lfw})que l'algorithme des K plus proches voisins est totalement inéfficasse. Celui-ci ne s'adapte pas du tout à cet ensemble compliqué à cause de ca faible capacité.
+
+\begin{figure}[H]
+  \begin{center}
+    \includegraphics[width=220pt]{images_rapport/hist_lfw.png}
+    \caption{Meilleurs résultats pour l'ensemble LFW}
+    \label{fig:results_lfw}
+  \end{center}
+\end{figure}
+Le réseaux de neurones donne des résultats plus prométeurs. Il nécessite en revanche un grand nombre d'image pour être efficase et atteindre un niveaude reconnaissance acceptable.
 
 \section{Particularités du projet}
 Une des caractéristiques de notre projet est qu'il a été réalisé par une équipe de trois personnes ayant suivient des formations différentes. De plus nous avons du mettre en place un gestionnaire de version (Git) afin de pouvoir travailler efficacement malgré nos diponibilités très disparates.
