@@ -140,21 +140,20 @@ A la suite de quoi nous utilisons une <<astuce mathématique>> qui consiste à c
 \begin{align}
   X_N = USU^T
 \end{align}
-Ou les colonnes de $U$ contienent les vecteurs propres et $S^2$ les valeurs propres associées. On ne conserve alors qu'une nombre $M$ de vecteurs propres (ie. $M$ colonnes de la matrice $U$). Après réduction du nombre de colonne on obtient une matrice $U^{\prime}$ (aussi appelée, dans notre cas, <<Eigenspace>>) dans laquelle on projetent l'ensemble de donnée $X$ afin de déterminer la matrice de poids $W$ associée :
+Ou les colonnes de $U$ contienent les vecteurs propres et $S^2$ les valeurs propres associées. On ne conserve alors qu'un nombre $M$ de vecteurs propres (ie. $M$ colonnes de la matrice $U$). Après réduction du nombre de colonne on obtient une matrice $U^{\prime}$ (aussi appelée, dans notre cas, <<Eigenspace>>) dans laquelle on projetent l'ensemble de donnée $X$ afin de déterminer la matrice de poids $W$ associée :
 \begin{align}
   W = \langle (U^{\prime})^T , X \rangle
 \end{align}
-
+Ainsi, pour chaque nouvel exemple $x$ on calculera son vecteur de poids $w$ par projection dans dans le Eigenspace $U^{\prime}$.
 
 \section{Résultats}
 
-\section{}
-Un des premiers points spécifiques à notre projet et le fait que ce dernier a été réalisé par une équipe de trois personnes ayant suivi des formations différentes. Nous n'avions pas les même disponibilités non plus pour avancer le projet du fait que nous étions inscris à des cours différents aussi. Cette raison a mené à la mise en place d'une gestionnaire de version avec une centralisation via un site web qui offre ce service : https://bitbucket.org/
-Ceci à donc rajouter une difficulté au projet qui était la gestion de l'équipe et la répartition des tâches au sein de cette dernière. L'usage d'un logiciel tel que Git pour gérer les versions en local et via aussi la passerelle distante.
+\section{Particularités du projet}
+Une des caractéristiques de notre projet est qu'il a été réalisé par une équipe de trois personnes ayant suivient des formations différentes. De plus nous avons du mettre en place un gestionnaire de version (Git) afin de pouvoir travailler efficacement malgré nos diponibilités très disparates.
 
-L'usage du python était aussi une des difficultés auquel nous avons voulu nous confronté étant donné que nous avons tous trois découvert ce langage au cours des derniers mois nous voulions essayé de le pratiquer dans en longueur au cours de ce projet.
+L'usage du langage Python à aussi ajouté son lot de complications car nous avons tous les trois découvert ce langage au début du semestre.
 
-Le sujet lui-même représente une difficulté quant à la recherche d'un bon résultat étant donné qu'encore à ce jour des entreprises et chercheurs travaillent encore au développement et à l'amélioration de système de reconnaissance faciale car aucun système n'est encore réellement fiable dans ce domaine.
+La dernière difficulté, et non des moindres, concerne le sujet en lui même. En effet, la reconnaissance faciale est encore un sujet d'étude actuellement et aucun système n'est encore réellement fiable dans ce domaine.
 
 \section{Conclusion}
 

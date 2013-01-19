@@ -36,14 +36,15 @@ class PCA (object):
         k = int(A.shape[1]*self.eigenKeepPercent)
         log.debug("Dimentionnality: "+ str(int(k)) +" - Before: "+ str(A.shape[1]))
         
-        self.eigenVectors = U[:, :int(k)]
+        self.eigenVectors = U[:,:int(k)]
         #log.debug("self.eigenVectors shape:" + str(self.eigenVectors.shape) )
 
         # Calcul des eigenvalues
         self.eigenValues = np.square(S)
 
         # Projection des images dans la base des eigenvectors
-        self.weightsVectors = np.dot( np.transpose(self.eigenVectors), A )
+        self.weightsVectors = np.dot( self.eigenVectors.T, A )
+        #self.weightsVectors = np.dot( V[:int(k),:], A )
     
         return self.eigenVectors, self.eigenValues, self.weightsVectors
         
